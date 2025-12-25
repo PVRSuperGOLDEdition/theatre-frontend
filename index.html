@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PVR Super Gold | Premium</title>
+    <title>PVR Super Gold | ID Verified</title>
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --card-bg: #111; --error: #ff4d4d; }
         body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow-x: hidden; height: 100%; }
@@ -76,32 +76,35 @@
 
         <div class="input-row">
             <div class="input-box"><label>Seats</label><input type="number" id="seats" value="1" min="1" oninput="calculateTotal()"></div>
-            <div class="input-box"><label>Time</label><input type="time" id="startTime" value="19:00"></div>
+            <div class="input-box"><label>Show Time</label><input type="time" id="startTime" value="19:00"></div>
         </div>
 
         <div class="method-toggle">
-            <div class="m-btn active" id="ptsBtn" onclick="setMethod('points')">POINTS<span class="btn-price">100 per seat</span></div>
-            <div class="m-btn" id="cashBtn" onclick="setMethod('cash')">CASH<span class="btn-price">300 per seat</span></div>
+            <div class="m-btn active" id="ptsBtn" onclick="setMethod('points')">POINTS<span class="btn-price">100 / seat</span></div>
+            <div class="m-btn" id="cashBtn" onclick="setMethod('cash')">CASH<span class="btn-price">300 / seat</span></div>
         </div>
         <div id="total-calc">Total: 100 Points</div>
 
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
-        <div id="ticket-list" style="width:100%; margin-top:20px; text-align:left;"></div>
+        <div id="wallet-section" style="width:100%; margin-top:20px; text-align:left;">
+            <div id="ticket-list"></div>
+        </div>
     </div>
 </div>
 
 <div id="ticket-page">
-    <div style="font-weight: 900; letter-spacing: 3px; font-size: 20px; margin-bottom: 25px; color: var(--gold);">PVR PREMIUM</div>
+    <div style="font-weight: 900; letter-spacing: 3px; font-size: 20px; margin-bottom: 25px; color: var(--gold);">SECURE PASS</div>
     <div class="qr-seal"><div class="scanner-line"></div><div id="qrcode"></div></div>
-    <div id="ticket-details" style="text-align: center; margin-top:20px; font-weight:bold;"></div>
-    <button class="confirm-btn" style="width:200px; margin-top:30px;" onclick="closeTicket()">Back</button>
+    <div id="ticket-details" style="text-align: center; margin-top:20px; font-weight:bold; color: #333;"></div>
+    <div style="margin-top: 10px; font-size: 12px; color: green; font-weight: bold;">ID VERIFIED • ACTIVE</div>
+    <button class="confirm-btn" style="width:200px; margin-top:30px;" onclick="closeTicket()">Close Ticket</button>
 </div>
 
 <div id="scanner-page">
     <h2 style="color:var(--gold)">GATE SCANNER</h2>
     <div id="reader"></div>
-    <button onclick="closeScanner()" style="margin-top:20px; color:white; background:none; border:1px solid #333; padding:10px 20px;">Exit</button>
+    <button onclick="closeScanner()" style="margin-top:20px; color:white; background:none; border:1px solid #333; padding:10px 20px; border-radius: 5px;">Cancel</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -124,12 +127,14 @@
         const s = parseInt(document.getElementById('seats').value);
         const t = document.getElementById('startTime').value;
         const cost = paymentMethod === 'points' ? s*100 : s*300;
-        if(!selectedMovieName) return alert("Select Movie");
-        if(tickets.length >= 3) return alert("Wallet Full");
-        if(paymentMethod==='points' && balance < cost) return alert("No Points");
+        if(!selectedMovieName) return alert("Please select a movie.");
+        if(tickets.length >= 3) return alert("Wallet Full (3 Max)");
+        if(paymentMethod==='points' && balance < cost) return alert("Insufficient Points.");
 
         if(paymentMethod==='points') balance -= cost;
-        const id = "PVR" + Math.random().toString(36).substr(2, 4).toUpperCase();
+        // Generate a clean ID for the scanner
+        const id = "PVR-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+        
         tickets.push({ id, movie: selectedMovieName, seats: s, time: t, method: paymentMethod.toUpperCase(), cost: cost });
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         updatePointsDisplay(); renderWallet(); openExistingTicket(tickets.length-1);
@@ -148,8 +153,9 @@
 
     function openExistingTicket(i) {
         const t = tickets[i];
-        document.getElementById('ticket-details').innerHTML = `${t.movie}<br>${t.time} • ${t.seats} SEATS<br>ID: ${t.id}`;
+        document.getElementById('ticket-details').innerHTML = `${t.movie}<br>SHOWTIME: ${t.time}<br>PASS ID: ${t.id}`;
         document.getElementById("qrcode").innerHTML = "";
+        // The QR code ONLY contains the ID now
         new QRCode(document.getElementById("qrcode"), { text: t.id, width: 200, height: 200 });
         document.getElementById('ticket-page').style.display = 'flex';
     }
@@ -160,24 +166,29 @@
     function openScanner() {
         document.getElementById('scanner-page').style.display = 'flex';
         scanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        scanner.render((id) => {
-            const idx = tickets.findIndex(t => t.id === id);
+        scanner.render((scannedId) => {
+            // Find ticket by ID only
+            const idx = tickets.findIndex(t => t.id === scannedId);
             if(idx !== -1) {
                 const movie = tickets[idx].movie;
+                // REMOVE TICKET
                 tickets.splice(idx, 1);
                 localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
+                
                 scanner.clear();
                 document.getElementById('scanner-page').style.display = 'none';
-                alert(`✅ ACCESS GRANTED\nMovie: ${movie}\nTicket removed from active.`);
+                alert(`✅ ACCESS GRANTED\nMovie: ${movie}\nTicket has been scanned and removed.`);
                 renderWallet();
-            } else { alert("❌ INVALID OR EXPIRED"); }
+            } else {
+                alert("❌ INVALID ID\nThis pass does not exist or was already used.");
+            }
         });
     }
 
     function closeScanner() { if(scanner) scanner.clear(); document.getElementById('scanner-page').style.display = 'none'; }
 
     function deleteTicket(i) {
-        if(confirm("Cancel & Refund?")) {
+        if(confirm("Refund ticket?")) {
             if(tickets[i].method === 'POINTS') balance += tickets[i].cost;
             tickets.splice(i, 1);
             localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
@@ -185,7 +196,7 @@
         }
     }
 
-    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Added!"); adminClicks=0; } }
+    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Points Added!"); adminClicks=0; } }
 </script>
 </body>
 </html>
