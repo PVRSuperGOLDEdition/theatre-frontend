@@ -20,9 +20,20 @@
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* WIDTH FIX: Precise 50/50 split */
-        .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
-        .input-box { width: calc(50% - 5px); text-align: left; }
+        /* FIX: Precise 50/50 split using Flexbox */
+        .input-row { 
+            display: flex; 
+            width: 100%; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+            box-sizing: border-box; 
+        }
+        .input-box { 
+            flex: 1; 
+            min-width: 0; 
+            text-align: left; 
+        }
+        
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
         
         input { 
@@ -37,6 +48,14 @@
             outline: none; 
             font-size: 14px;
             display: block;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        /* Ensuring time input icon doesn't shift height */
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7) sepia(1) saturate(5) hue-rotate(10deg);
+            cursor: pointer;
         }
 
         .method-toggle { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -64,8 +83,8 @@
 
 <div id="booking-page">
     <div class="container">
-        <h1 onclick="openScanner()">PVR Super Gold</h1>
-        <div class="balance-card" onclick="adminPointsAdd()"><div class="balance-value" id="balanceText">100 Points</div></div>
+        <h1 onclick="adminPointsAdd()">PVR Super Gold</h1>
+        <div class="balance-card"><div class="balance-value" id="balanceText">100 Points</div></div>
 
         <div class="movie-grid">
             <div class="movie-option" onclick="selectMovie('Avatar 2', this)">Avatar 2</div>
@@ -75,8 +94,14 @@
         </div>
 
         <div class="input-row">
-            <div class="input-box"><label>Seats</label><input type="number" id="seats" value="1" min="1" oninput="calculateTotal()"></div>
-            <div class="input-box"><label>Time</label><input type="time" id="startTime" value="19:00"></div>
+            <div class="input-box">
+                <label>Seats</label>
+                <input type="number" id="seats" value="1" min="1" oninput="calculateTotal()">
+            </div>
+            <div class="input-box">
+                <label>Time</label>
+                <input type="time" id="startTime" value="19:00">
+            </div>
         </div>
 
         <div class="method-toggle">
@@ -108,26 +133,51 @@
 
     window.onload = () => { updatePointsDisplay(); renderWallet(); calculateTotal(); };
 
-    function selectMovie(name, el) { selectedMovieName = name; document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected')); el.classList.add('selected'); }
-    function setMethod(m) { paymentMethod = m; document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); calculateTotal(); }
+    function selectMovie(name, el) { 
+        selectedMovieName = name; 
+        document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected')); 
+        el.classList.add('selected'); 
+    }
+
+    function setMethod(m) { 
+        paymentMethod = m; 
+        document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); 
+        document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); 
+        calculateTotal(); 
+    }
+
     function calculateTotal() { 
         const s = parseInt(document.getElementById('seats').value) || 0; 
         document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 100 + ' Points' : s * 300 + ' Cash'}`; 
     }
 
-    function updatePointsDisplay() { document.getElementById('balanceText').innerText = `${balance} Points`; localStorage.setItem('pvr_balance', balance); }
+    function updatePointsDisplay() { 
+        document.getElementById('balanceText').innerText = `${balance} Points`; 
+        localStorage.setItem('pvr_balance', balance); 
+    }
 
     function bookNow() {
         const s = parseInt(document.getElementById('seats').value) || 1;
         const cost = paymentMethod === 'points' ? s * 100 : s * 300;
         if(!selectedMovieName) return alert("Select Movie");
         if(paymentMethod === 'points' && balance < cost) return alert("Low Points");
+        
         if(paymentMethod === 'points') balance -= cost;
         
-        const newTicket = { movie: selectedMovieName, seats: s, time: document.getElementById('startTime').value, method: paymentMethod.toUpperCase(), cost: cost, id: Math.random().toString(36).substr(2, 6) };
+        const newTicket = { 
+            movie: selectedMovieName, 
+            seats: s, 
+            time: document.getElementById('startTime').value, 
+            method: paymentMethod.toUpperCase(), 
+            cost: cost, 
+            id: Math.random().toString(36).substr(2, 6) 
+        };
+        
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
-        updatePointsDisplay(); renderWallet(); openExistingTicket(tickets.length - 1);
+        updatePointsDisplay(); 
+        renderWallet(); 
+        openExistingTicket(tickets.length - 1);
     }
 
     function renderWallet() {
@@ -153,8 +203,7 @@
 
     function deleteWithRefund(i) {
         if(confirm("Cancel and Refund?")) {
-            // Fix: Check case-insensitive
-            if(tickets[i].method.toUpperCase() === 'POINTS') {
+            if(tickets[i].method === 'POINTS') {
                 balance += tickets[i].cost;
                 updatePointsDisplay();
             }
@@ -164,9 +213,25 @@
         }
     }
 
-    function redeem(i) { tickets.splice(i, 1); localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); renderWallet(); closeTicket(); alert("✅ Redeemed"); }
+    function redeem(i) { 
+        tickets.splice(i, 1); 
+        localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); 
+        renderWallet(); 
+        closeTicket(); 
+        alert("✅ Redeemed"); 
+    }
+
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
-    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Pts"); adminClicks=0; } }
+    
+    function adminPointsAdd() { 
+        adminClicks++; 
+        if(adminClicks >= 5) { 
+            balance += 100; 
+            updatePointsDisplay(); 
+            alert("+100 Pts Added"); 
+            adminClicks = 0; 
+        } 
+    }
 </script>
 </body>
 </html>
