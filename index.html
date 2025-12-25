@@ -37,30 +37,43 @@
 
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
 
-        /* --- THE DOUBLE GOLD BORDERS + RED FLASHING SEAL --- */
-        .seal-wrapper { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; margin: 15px auto; }
-        
-        /* The Two Gold Borders */
-        .gold-outer { position: absolute; width: 100%; height: 100%; border: 2px solid var(--gold); border-radius: 50%; opacity: 0.4; }
-        .gold-inner { position: absolute; width: 92%; height: 92%; border: 1px solid var(--gold); border-radius: 50%; opacity: 0.2; }
-        
-        /* The Red Flashing Ring */
-        .red-flash { 
-            position: absolute; width: 85%; height: 85%; border: 4px solid var(--error); border-radius: 50%; 
-            animation: scanner-pulse 0.7s infinite alternate; box-sizing: border-box; 
-        }
-        
-        @keyframes scanner-pulse {
-            from { transform: scale(0.95); opacity: 0.3; }
-            to { transform: scale(1.05); opacity: 1; box-shadow: 0 0 15px var(--error); }
+        /* --- THE SQUARE GOLD BORDER + SCAN LINE --- */
+        .qr-frame { 
+            position: relative; 
+            padding: 15px; 
+            border: 2px solid var(--gold); 
+            outline: 4px solid var(--bg); /* creates gap */
+            box-shadow: 0 0 0 1px var(--gold); /* the second border */
+            margin: 20px auto;
+            display: inline-block;
+            background: #fff;
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        #qrcode { background: #fff; padding: 12px; border-radius: 8px; z-index: 10; position: relative; }
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: var(--error);
+            box-shadow: 0 0 15px var(--error);
+            top: 0;
+            left: 0;
+            z-index: 15;
+            animation: moveLine 2.5s infinite linear;
+        }
+
+        @keyframes moveLine {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+
+        #qrcode { position: relative; z-index: 10; }
 
         /* Ticket View Overlays */
         #ticket-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
-        
-        .price-text-label { font-size: 13px; font-weight: 900; color: #000; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid #000; padding: 0 10px; }
+        .price-text-label { font-size: 13px; font-weight: 900; color: #000; text-transform: uppercase; margin-bottom: 10px; }
         
         .gate-control { margin-top: 50px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
         .redeem-txt { color: #888; font-size: 13px; cursor: pointer; text-decoration: underline; font-weight: bold; }
@@ -71,10 +84,7 @@
 <div id="booking-page">
     <div class="container">
         <h1 onclick="openScanner()">PVR Super Gold</h1>
-
-        <div class="balance-card" onclick="adminPointsAdd()">
-            <div class="balance-value" id="balanceText">100 Points</div>
-        </div>
+        <div class="balance-card" onclick="adminPointsAdd()"><div class="balance-value" id="balanceText">100 Points</div></div>
 
         <div class="movie-grid">
             <div class="movie-option" onclick="selectMovie('Avatar 2', this)">Avatar 2</div>
@@ -95,28 +105,22 @@
 
         <div id="total-calc">Total: 100 Points</div>
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
-
         <div id="ticket-list" style="margin-top:20px; width:100%;"></div>
     </div>
 </div>
 
 <div id="ticket-page">
     <div style="font-weight: 900; letter-spacing: 4px; font-size: 18px; margin-bottom: 5px;">ENTRY PASS</div>
-    
     <div id="price-desc" class="price-text-label"></div>
 
-    <div class="seal-wrapper">
-        <div class="gold-outer"></div>
-        <div class="gold-inner"></div>
-        <div class="red-flash"></div>
+    <div class="qr-frame">
+        <div class="scan-line"></div>
         <div id="qrcode"></div>
     </div>
     
     <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8;"></div>
     
-    <div id="cash-payment-info" style="color: var(--error); font-weight: 900; font-size: 22px; margin-top: 10px; display: none;"></div>
-
-    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px; border-radius: 50px;" onclick="closeTicket()">Back</button>
+    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:30px; border-radius: 50px;" onclick="closeTicket()">Back</button>
 
     <div class="gate-control">
         <div id="redeem-btn-container"></div>
@@ -145,17 +149,14 @@
     function bookNow() {
         const s = parseInt(document.getElementById('seats').value) || 1;
         const cost = paymentMethod === 'points' ? s * 100 : s * 300;
-
         if(!selectedMovieName) return alert("Select Movie");
         if(paymentMethod === 'points' && balance < cost) return alert("Low Points");
-
         if(paymentMethod === 'points') balance -= cost;
         
         const newTicket = { 
             movie: selectedMovieName, seats: s, time: document.getElementById('startTime').value, 
             method: paymentMethod.toUpperCase(), cost: cost, id: Math.random().toString(36).substr(2, 6) 
         };
-
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         updatePointsDisplay(); renderWallet(); openExistingTicket(tickets.length - 1);
@@ -166,9 +167,7 @@
         list.innerHTML = "";
         tickets.forEach((t, i) => {
             list.innerHTML += `<div class="ticket-bar" onclick="openExistingTicket(${i})">
-                <div class="ticket-info">
-                    <b>${t.movie}</b><br><small>${t.time} • ${t.seats} Seats (${t.method})</small>
-                </div>
+                <div class="ticket-info"><b>${t.movie}</b><br><small>${t.time} • ${t.seats} Seats</small></div>
                 <div class="delete-btn" onclick="event.stopPropagation(); deleteWithRefund(${i})">×</div>
             </div>`;
         });
@@ -176,19 +175,7 @@
 
     function openExistingTicket(i) {
         const t = tickets[i];
-        
-        // Setting the requested price labels
-        const desc = document.getElementById('price-desc');
-        const cashInfo = document.getElementById('cash-payment-info');
-        
-        if(t.method === 'CASH') {
-            desc.innerText = "300 cash";
-            cashInfo.style.display = "block";
-            cashInfo.innerText = `COLLECT ₹${t.cost}`;
-        } else {
-            desc.innerText = "100 points per seat";
-            cashInfo.style.display = "none";
-        }
+        document.getElementById('price-desc').innerText = t.method === 'CASH' ? "300 cash" : "100 points per seat";
 
         document.getElementById('ticket-details').innerHTML = `
             <b>${t.movie}</b><br>
@@ -196,8 +183,16 @@
             <b>TOTAL: ${t.cost} ${t.method}</b>
         `;
 
+        // QR DATA FORMAT LOGIC
+        let qrData = "";
+        if(t.method === 'CASH') {
+            qrData = `PVR-SG|CASH|${t.cost}`;
+        } else {
+            qrData = `PVR-SG|POINTS`;
+        }
+
         document.getElementById("qrcode").innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: t.id, width: 170, height: 170 });
+        new QRCode(document.getElementById("qrcode"), { text: qrData, width: 180, height: 180 });
 
         document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeem(${i})">REDEEM & DELETE</span>`;
         document.getElementById('ticket-page').style.display = 'flex';
@@ -208,7 +203,7 @@
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         renderWallet();
         closeTicket();
-        alert("✅ Ticket Redeemed");
+        alert("✅ Redeemed");
     }
 
     function deleteWithRefund(i) {
