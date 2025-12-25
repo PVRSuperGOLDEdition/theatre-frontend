@@ -37,7 +37,6 @@
 
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
 
-        /* Overlays */
         #ticket-page, #scanner-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
         #scanner-page { background: #000; color: #fff; justify-content: center; }
         #qrcode { background: #fff; padding: 10px; margin-bottom: 20px; }
@@ -101,35 +100,64 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-    let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
+    let balance = parseInt(localStorage.getItem('pvr_balance')) || 500; // Increased starting balance for testing
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
     let selectedMovieName = "";
     let paymentMethod = 'points';
     let adminClicks = 0;
 
+    // Pricing Constants
+    const PRICE_POINTS = 100;
+    const PRICE_CASH = 300;
+
     window.onload = () => { updatePointsDisplay(); renderWallet(); calculateTotal(); };
 
     function selectMovie(name, el) { selectedMovieName = name; document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected')); el.classList.add('selected'); }
-    function setMethod(m) { paymentMethod = m; document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); calculateTotal(); }
-    function calculateTotal() { const s = parseInt(document.getElementById('seats').value) || 0; document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 100 + ' Points' : s * 300 + ' Cash'}`; }
-    function updatePointsDisplay() { document.getElementById('balanceText').innerText = `${balance} Points`; localStorage.setItem('pvr_balance', balance); }
+    
+    function setMethod(m) { 
+        paymentMethod = m; 
+        document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); 
+        document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); 
+        calculateTotal(); 
+    }
+
+    function calculateTotal() { 
+        const s = parseInt(document.getElementById('seats').value) || 0; 
+        const total = paymentMethod === 'points' ? s * PRICE_POINTS : s * PRICE_CASH;
+        const unit = paymentMethod === 'points' ? 'Points' : 'Rupees';
+        document.getElementById('total-calc').innerText = `Total: ${total} ${unit}`; 
+    }
+
+    function updatePointsDisplay() { 
+        document.getElementById('balanceText').innerText = `${balance} Points`; 
+        localStorage.setItem('pvr_balance', balance); 
+    }
 
     function bookNow() {
         const s = parseInt(document.getElementById('seats').value) || 1;
-        const cost = paymentMethod === 'points' ? s * 100 : s * 300;
-        if(!selectedMovieName) return alert("Select Movie");
-        if(paymentMethod === 'points' && balance < cost) return alert("Low Points");
+        const cost = paymentMethod === 'points' ? s * PRICE_POINTS : s * PRICE_CASH;
+        
+        if(!selectedMovieName) return alert("Please select a Movie");
+        if(paymentMethod === 'points' && balance < cost) return alert("Insufficient Points Balance");
 
-        if(paymentMethod === 'points') balance -= cost;
+        if(paymentMethod === 'points') {
+            balance -= cost;
+        }
         
         const newTicket = { 
-            movie: selectedMovieName, seats: s, time: document.getElementById('startTime').value, 
-            method: paymentMethod.toUpperCase(), cost: cost, id: Math.random().toString(36).substr(2, 6) 
+            movie: selectedMovieName, 
+            seats: s, 
+            time: document.getElementById('startTime').value, 
+            method: paymentMethod.toUpperCase(), 
+            cost: cost, 
+            id: Math.random().toString(36).substr(2, 6) 
         };
 
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
-        updatePointsDisplay(); renderWallet(); openExistingTicket(tickets.length - 1);
+        updatePointsDisplay(); 
+        renderWallet(); 
+        openExistingTicket(tickets.length - 1);
     }
 
     function renderWallet() {
@@ -147,11 +175,10 @@
 
     function openExistingTicket(i) {
         const t = tickets[i];
-        document.getElementById('type-banner').innerText = t.method === 'CASH' ? "CASH ENTRY" : "POINTS ENTRY";
-        document.getElementById('ticket-details').innerHTML = `<b>${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}`;
+        document.getElementById('type-banner').innerText = t.method === 'CASH' ? "💎 CASH ENTRY" : "🎫 POINTS ENTRY";
+        document.getElementById('ticket-details').innerHTML = `<b>${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}<br>Total: ${t.cost} ${t.method === 'CASH' ? 'Rs' : 'Pts'}`;
         document.getElementById("qrcode").innerHTML = "";
         
-        // Data format: KEY|ID|METHOD|COST
         const qrData = `PVR|${t.id}|${t.method}|${t.cost}`;
         new QRCode(document.getElementById("qrcode"), { text: qrData, width: 200, height: 200 });
 
@@ -160,18 +187,16 @@
         document.getElementById('ticket-page').scrollTop = 0;
     }
 
-    // THIS IS THE SCANNER LOGIC / REDEEM LOGIC
     function redeemProcess(i) {
         const t = tickets[i];
         if(t.method === 'CASH') {
-            alert(`💰 PAYMENT REQUIRED\nPlease collect: ${t.cost} Cash from user.`);
+            alert(`💰 PAYMENT REQUIRED\nPlease collect: ₹${t.cost} Cash from user.`);
         }
         tickets.splice(i, 1);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         renderWallet();
         closeTicket();
-        if(t.method === 'CASH') alert("✅ Cash Ticket Redeemed.");
-        else alert("✅ Points Ticket Redeemed.");
+        alert(`✅ ${t.method} Ticket Redeemed successfully.`);
     }
 
     let scanner;
@@ -183,31 +208,31 @@
             if(parts[0] !== 'PVR') return alert("Invalid QR");
             
             const id = parts[1];
-            const method = parts[2];
-            const cost = parts[3];
-            
             const idx = tickets.findIndex(t => t.id === id);
             if(idx !== -1) {
                 scanner.clear();
                 document.getElementById('scanner-page').style.display = 'none';
-                redeemProcess(idx); // Calls the payment check logic
+                redeemProcess(idx);
             } else {
-                alert("❌ Ticket Not Found or Already Used");
+                alert("❌ Ticket Not Found");
             }
         });
     }
 
     function deleteWithRefund(i) {
         if(confirm("Cancel and Refund?")) {
-            if(tickets[i].method === 'POINTS') balance += tickets[i].cost;
+            if(tickets[i].method === 'POINTS') {
+                balance += tickets[i].cost;
+            }
             tickets.splice(i, 1);
-            updatePointsDisplay(); renderWallet();
+            updatePointsDisplay(); 
+            renderWallet();
         }
     }
 
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
     function closeScanner() { if(scanner) scanner.clear(); document.getElementById('scanner-page').style.display = 'none'; }
-    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Points"); adminClicks=0; } }
+    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Points added"); adminClicks=0; } }
 </script>
 </body>
 </html>
