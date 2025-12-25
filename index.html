@@ -31,32 +31,26 @@
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
 
-        /* Payment Buttons */
-        .method-toggle { display: flex; gap: 10px; margin-bottom: 10px; }
-        .m-btn { flex: 1; padding: 12px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        /* Payment Buttons with explicit prices */
+        .method-toggle { display: flex; gap: 10px; margin-bottom: 5px; }
+        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
-        #price-tag { font-size: 13px; color: var(--gold); margin-bottom: 20px; font-weight: bold; }
+        .btn-price { display: block; font-size: 10px; opacity: 0.7; margin-top: 4px; }
 
-        /* Wallet Section */
+        #total-calc { font-size: 14px; color: var(--gold); margin: 15px 0; font-weight: bold; background: rgba(212,175,55,0.05); padding: 10px; border-radius: 8px; }
+
+        /* Wallet */
         #wallet-section { width: 100%; margin-top: 25px; text-align: left; }
         .wallet-title { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-        .ticket-bar { 
-            background: #161616; border-left: 3px solid var(--gold); padding: 12px; 
-            border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
-        }
+        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         .ticket-info { flex-grow: 1; cursor: pointer; }
-        .delete-btn { color: #555; font-size: 20px; padding: 5px 10px; cursor: pointer; margin-left: 10px; }
+        .delete-btn { color: #555; font-size: 20px; padding: 5px 10px; cursor: pointer; }
 
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; font-size: 15px; }
 
-        /* TICKET OVERLAY */
-        #ticket-page {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000;
-            display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
-            animation: slideUp 0.3s ease-out;
-        }
+        /* Ticket Overlay */
+        #ticket-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
         #qrcode { background: #fff; padding: 10px; margin-bottom: 20px; }
         .close-btn { margin-top: 30px; padding: 15px 40px; background: #000; color: #fff; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
     </style>
@@ -82,7 +76,7 @@
         <div class="input-row">
             <div class="input-box">
                 <label>Seats</label>
-                <input type="number" id="seats" value="1" min="1" oninput="updatePrice()">
+                <input type="number" id="seats" value="1" min="1" oninput="calculateTotal()">
             </div>
             <div class="input-box">
                 <label>Show Time</label>
@@ -90,11 +84,19 @@
             </div>
         </div>
 
+        <label>Payment Method</label>
         <div class="method-toggle">
-            <button class="m-btn active" id="ptsBtn" onclick="setMethod('points')">Points</button>
-            <button class="m-btn" id="cashBtn" onclick="setMethod('cash')">Cash</button>
+            <div class="m-btn active" id="ptsBtn" onclick="setMethod('points')">
+                POINTS
+                <span class="btn-price">100 per seat</span>
+            </div>
+            <div class="m-btn" id="cashBtn" onclick="setMethod('cash')">
+                CASH
+                <span class="btn-price">300 per seat</span>
+            </div>
         </div>
-        <div id="price-tag">Total: 100 Points</div>
+
+        <div id="total-calc">Total: 100 Points</div>
 
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
@@ -114,9 +116,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-    let balance = parseInt(localStorage.getItem('pvr_balance'));
-    if (isNaN(balance)) { balance = 100; localStorage.setItem('pvr_balance', 100); }
-    
+    let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
     let selectedMovieName = "";
     let paymentMethod = 'points';
@@ -125,7 +125,7 @@
     window.onload = () => {
         updatePointsDisplay();
         renderWallet();
-        updatePrice();
+        calculateTotal();
     };
 
     function selectMovie(name, el) {
@@ -138,16 +138,16 @@
         paymentMethod = m;
         document.getElementById('ptsBtn').classList.toggle('active', m === 'points');
         document.getElementById('cashBtn').classList.toggle('active', m === 'cash');
-        updatePrice();
+        calculateTotal();
     }
 
-    function updatePrice() {
+    function calculateTotal() {
         const seats = parseInt(document.getElementById('seats').value) || 0;
-        const tag = document.getElementById('price-tag');
+        const totalDiv = document.getElementById('total-calc');
         if (paymentMethod === 'points') {
-            tag.innerText = `Total: ${seats * 100} Points`;
+            totalDiv.innerText = `Total: ${seats * 100} Points`;
         } else {
-            tag.innerText = `Total: ₹${seats * 300} Cash`;
+            totalDiv.innerText = `Total: ${seats * 300} Cash`;
         }
     }
 
@@ -160,7 +160,6 @@
         const list = document.getElementById('ticket-list');
         list.innerHTML = "";
         document.getElementById('walletLabel').innerText = `Active Tickets (${tickets.length}/3)`;
-        
         tickets.forEach((t, index) => {
             const bar = document.createElement('div');
             bar.className = 'ticket-bar';
@@ -178,30 +177,25 @@
     function bookNow() {
         const seatCount = parseInt(document.getElementById('seats').value) || 1;
         const showTime = document.getElementById('startTime').value;
-        const pointCost = seatCount * 100;
-        const cashCost = seatCount * 300;
+        const costPerSeat = paymentMethod === 'points' ? 100 : 300;
+        const totalCost = seatCount * costPerSeat;
 
         if(!selectedMovieName) { alert("Please select a movie."); return; }
-        if(tickets.length >= 3) { alert("Wallet full. Cancel a ticket first."); return; }
+        if(tickets.length >= 3) { alert("Wallet full (Max 3)."); return; }
         
         if(paymentMethod === 'points') {
-            if(balance < pointCost) { alert("Insufficient Points."); return; }
-            balance -= pointCost;
+            if(balance < totalCost) { alert("Insufficient Points."); return; }
+            balance -= totalCost;
             updatePointsDisplay();
         }
 
         const newTicket = { 
-            movie: selectedMovieName, 
-            seats: seatCount, 
-            time: showTime, 
-            method: paymentMethod.toUpperCase(),
-            cost: paymentMethod === 'points' ? pointCost : cashCost,
-            id: Math.random().toString(36).substr(2, 6) 
+            movie: selectedMovieName, seats: seatCount, time: showTime, 
+            method: paymentMethod.toUpperCase(), cost: totalCost, id: Math.random().toString(36).substr(2, 6) 
         };
 
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
-        
         renderWallet();
         openExistingTicket(tickets.length - 1);
     }
@@ -209,27 +203,16 @@
     function openExistingTicket(index) {
         const t = tickets[index];
         const details = document.getElementById('ticket-details');
-        details.innerHTML = `
-            <b>MOVIE:</b> ${t.movie.toUpperCase()}<br>
-            <b>SEATS:</b> ${t.seats} | <b>TIME:</b> ${t.time}<br>
-            <b>PAYMENT:</b> ${t.method}
-        `;
+        details.innerHTML = `<b>MOVIE:</b> ${t.movie.toUpperCase()}<br><b>SEATS:</b> ${t.seats} | <b>TIME:</b> ${t.time}<br><b>PAYMENT:</b> ${t.method}`;
         document.getElementById("qrcode").innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { 
-            text: `PVR-SG|${t.id}|${t.movie}|${t.time}`, 
-            width: 200, height: 200 
-        });
+        new QRCode(document.getElementById("qrcode"), { text: `PVR-SG|${t.id}|${t.movie}`, width: 200, height: 200 });
         document.getElementById('ticket-page').style.display = 'flex';
     }
 
     function deleteTicket(index) {
         const t = tickets[index];
-        const refundMsg = t.method === 'POINTS' ? `refund of ${t.cost} Points` : "Cash refund at counter";
-        if(confirm(`Cancel booking? You will receive a ${refundMsg}.`)) {
-            if(t.method === 'POINTS') {
-                balance += t.cost;
-                updatePointsDisplay();
-            }
+        if(confirm(`Cancel booking? Refund: ${t.method === 'POINTS' ? t.cost + ' Points' : 'Cash'}`)) {
+            if(t.method === 'POINTS') { balance += t.cost; updatePointsDisplay(); }
             tickets.splice(index, 1);
             localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
             renderWallet();
@@ -243,7 +226,7 @@
         if (adminClicks >= 5) {
             balance += 100;
             updatePointsDisplay();
-            alert("Admin: +100 Points Added!");
+            alert("+100 Points Added!");
             adminClicks = 0;
         }
     }
