@@ -20,7 +20,7 @@
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* WIDTH FIX: Precise 50/50 split */
+        /* WIDTH FIX */
         .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
         .input-box { width: calc(50% - 5px); text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
@@ -65,10 +65,7 @@
 <div id="booking-page">
     <div class="container">
         <h1 onclick="adminRefill()">PVR Super Gold</h1>
-        
-        <div class="balance-card" onclick="adminRefill()">
-            <div class="balance-value" id="balanceText">Loading...</div>
-        </div>
+        <div class="balance-card" onclick="adminRefill()"><div class="balance-value" id="balanceText">Loading...</div></div>
 
         <div class="movie-grid">
             <div class="movie-option" onclick="selectMovie('Dhurandhar', this)">Dhurandhar</div>
@@ -172,7 +169,10 @@
     function openExistingTicket(i) {
         const t = tickets[i];
         document.getElementById('ticket-details').innerHTML = `<b style="font-size: 18px;">${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}`;
-        let qrData = t.method === 'CASH' ? `PVR-SG|CASH|${t.cost}` : `PVR-SG|POINTS`;
+        
+        // UPDATED QR DATA FORMAT: PVR-SG|NAME|CASH:PRICE or PVR-SG|NAME|POINTS
+        let qrData = t.method === 'CASH' ? `PVR-SG|${t.movie}|CASH:${t.cost}` : `PVR-SG|${t.movie}|POINTS`;
+        
         document.getElementById("qrcode").innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: qrData, width: 180, height: 180 });
         document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeem(${i})">REDEEM & DELETE</span>`;
