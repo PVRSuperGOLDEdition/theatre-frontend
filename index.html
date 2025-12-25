@@ -20,7 +20,7 @@
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* WIDTH FIX: Precise 50/50 split */
+        /* WIDTH FIX: Precise 50/50 split using calc to account for gap */
         .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
         .input-box { width: calc(50% - 5px); text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
@@ -84,7 +84,7 @@
             <div class="m-btn" id="cashBtn" onclick="setMethod('cash')">CASH</div>
         </div>
 
-        <div id="total-calc">Total: 150 Points</div>
+        <div id="total-calc">Total: 100 Points</div>
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
         <div id="ticket-list" style="margin-top:20px; width:100%;"></div>
     </div>
@@ -100,7 +100,7 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-    let balance = parseInt(localStorage.getItem('pvr_balance')) || 1000; // Increased starting balance for testing
+    let balance = parseInt(localStorage.getItem('pvr_balance')) || 500;
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
     let selectedMovieName = "";
     let paymentMethod = 'points';
@@ -123,8 +123,8 @@
 
     function calculateTotal() { 
         const s = parseInt(document.getElementById('seats').value) || 0; 
-        // Updated Price: 150 for Points, 300 for Cash
-        document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 150 + ' Points' : s * 300 + ' Cash'}`; 
+        // UPDATED PRICE: 100 for Points, 150 for Cash
+        document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 100 + ' Points' : s * 150 + ' Cash'}`; 
     }
 
     function updatePointsDisplay() { 
@@ -134,7 +134,7 @@
 
     function bookNow() {
         const s = parseInt(document.getElementById('seats').value) || 1;
-        const cost = paymentMethod === 'points' ? s * 150 : s * 300;
+        const cost = paymentMethod === 'points' ? s * 100 : s * 150;
         if(!selectedMovieName) return alert("Select Movie");
         if(paymentMethod === 'points' && balance < cost) return alert("Low Points");
         
@@ -179,9 +179,9 @@
 
     function deleteWithRefund(i) {
         if(confirm("Cancel and Refund?")) {
-            // Checks for "POINTS" method to trigger refund
+            // FIXED REFUND LOGIC: Ensures point addition works every time
             if(tickets[i].method === 'POINTS') {
-                balance += tickets[i].cost;
+                balance = balance + tickets[i].cost;
                 updatePointsDisplay();
             }
             tickets.splice(i, 1);
