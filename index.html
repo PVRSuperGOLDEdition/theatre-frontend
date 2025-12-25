@@ -26,24 +26,44 @@
         input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
 
         .method-toggle { display: flex; gap: 10px; margin-bottom: 5px; }
-        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; }
+        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; font-weight: bold; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
         
         #total-calc { font-size: 14px; color: var(--gold); margin: 15px 0; font-weight: bold; background: rgba(212,175,55,0.05); padding: 10px; border-radius: 8px; }
 
-        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
         .ticket-info { flex-grow: 1; cursor: pointer; }
         .delete-btn { color: #555; font-size: 20px; padding: 5px 10px; cursor: pointer; }
 
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
 
-        #ticket-page, #scanner-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
-        #scanner-page { background: #000; color: #fff; justify-content: center; }
-        #qrcode { background: #fff; padding: 10px; margin-bottom: 20px; }
-        #reader { width: 300px; border: 2px solid var(--gold); border-radius: 10px; overflow: hidden; }
+        /* --- THE DOUBLE GOLD BORDERS + RED FLASHING SEAL --- */
+        .seal-wrapper { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; margin: 15px auto; }
+        
+        /* The Two Gold Borders */
+        .gold-outer { position: absolute; width: 100%; height: 100%; border: 2px solid var(--gold); border-radius: 50%; opacity: 0.4; }
+        .gold-inner { position: absolute; width: 92%; height: 92%; border: 1px solid var(--gold); border-radius: 50%; opacity: 0.2; }
+        
+        /* The Red Flashing Ring */
+        .red-flash { 
+            position: absolute; width: 85%; height: 85%; border: 4px solid var(--error); border-radius: 50%; 
+            animation: scanner-pulse 0.7s infinite alternate; box-sizing: border-box; 
+        }
+        
+        @keyframes scanner-pulse {
+            from { transform: scale(0.95); opacity: 0.3; }
+            to { transform: scale(1.05); opacity: 1; box-shadow: 0 0 15px var(--error); }
+        }
 
-        .gate-control { margin-top: 80px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
-        .redeem-txt { color: #888; font-size: 12px; cursor: pointer; text-decoration: underline; font-weight: bold; }
+        #qrcode { background: #fff; padding: 12px; border-radius: 8px; z-index: 10; position: relative; }
+
+        /* Ticket View Overlays */
+        #ticket-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
+        
+        .price-text-label { font-size: 13px; font-weight: 900; color: #000; text-transform: uppercase; margin-bottom: 10px; border-bottom: 2px solid #000; padding: 0 10px; }
+        
+        .gate-control { margin-top: 50px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
+        .redeem-txt { color: #888; font-size: 13px; cursor: pointer; text-decoration: underline; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -76,163 +96,131 @@
         <div id="total-calc">Total: 100 Points</div>
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
-        <div id="ticket-list" style="margin-top:20px; text-align:left; width:100%;"></div>
+        <div id="ticket-list" style="margin-top:20px; width:100%;"></div>
     </div>
 </div>
 
 <div id="ticket-page">
-    <div id="type-banner" style="font-weight:bold; color:var(--gold); margin-bottom:10px;"></div>
-    <div id="qrcode"></div>
+    <div style="font-weight: 900; letter-spacing: 4px; font-size: 18px; margin-bottom: 5px;">ENTRY PASS</div>
+    
+    <div id="price-desc" class="price-text-label"></div>
+
+    <div class="seal-wrapper">
+        <div class="gold-outer"></div>
+        <div class="gold-inner"></div>
+        <div class="red-flash"></div>
+        <div id="qrcode"></div>
+    </div>
+    
     <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8;"></div>
-    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px;" onclick="closeTicket()">Back</button>
+    
+    <div id="cash-payment-info" style="color: var(--error); font-weight: 900; font-size: 22px; margin-top: 10px; display: none;"></div>
+
+    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px; border-radius: 50px;" onclick="closeTicket()">Back</button>
 
     <div class="gate-control">
         <div id="redeem-btn-container"></div>
     </div>
 </div>
 
-<div id="scanner-page">
-    <h2 style="color:var(--gold)">GATE SCANNER</h2>
-    <div id="reader"></div>
-    <button class="confirm-btn" style="width:200px; margin-top:20px;" onclick="closeScanner()">Cancel</button>
-</div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-    let balance = parseInt(localStorage.getItem('pvr_balance')) || 500; // Increased starting balance for testing
+    let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
     let selectedMovieName = "";
     let paymentMethod = 'points';
     let adminClicks = 0;
 
-    // Pricing Constants
-    const PRICE_POINTS = 100;
-    const PRICE_CASH = 300;
-
     window.onload = () => { updatePointsDisplay(); renderWallet(); calculateTotal(); };
 
     function selectMovie(name, el) { selectedMovieName = name; document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected')); el.classList.add('selected'); }
-    
-    function setMethod(m) { 
-        paymentMethod = m; 
-        document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); 
-        document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); 
-        calculateTotal(); 
-    }
-
+    function setMethod(m) { paymentMethod = m; document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); calculateTotal(); }
     function calculateTotal() { 
         const s = parseInt(document.getElementById('seats').value) || 0; 
-        const total = paymentMethod === 'points' ? s * PRICE_POINTS : s * PRICE_CASH;
-        const unit = paymentMethod === 'points' ? 'Points' : 'Rupees';
-        document.getElementById('total-calc').innerText = `Total: ${total} ${unit}`; 
+        document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 100 + ' Points' : s * 300 + ' Cash'}`; 
     }
 
-    function updatePointsDisplay() { 
-        document.getElementById('balanceText').innerText = `${balance} Points`; 
-        localStorage.setItem('pvr_balance', balance); 
-    }
+    function updatePointsDisplay() { document.getElementById('balanceText').innerText = `${balance} Points`; localStorage.setItem('pvr_balance', balance); }
 
     function bookNow() {
         const s = parseInt(document.getElementById('seats').value) || 1;
-        const cost = paymentMethod === 'points' ? s * PRICE_POINTS : s * PRICE_CASH;
-        
-        if(!selectedMovieName) return alert("Please select a Movie");
-        if(paymentMethod === 'points' && balance < cost) return alert("Insufficient Points Balance");
+        const cost = paymentMethod === 'points' ? s * 100 : s * 300;
 
-        if(paymentMethod === 'points') {
-            balance -= cost;
-        }
+        if(!selectedMovieName) return alert("Select Movie");
+        if(paymentMethod === 'points' && balance < cost) return alert("Low Points");
+
+        if(paymentMethod === 'points') balance -= cost;
         
         const newTicket = { 
-            movie: selectedMovieName, 
-            seats: s, 
-            time: document.getElementById('startTime').value, 
-            method: paymentMethod.toUpperCase(), 
-            cost: cost, 
-            id: Math.random().toString(36).substr(2, 6) 
+            movie: selectedMovieName, seats: s, time: document.getElementById('startTime').value, 
+            method: paymentMethod.toUpperCase(), cost: cost, id: Math.random().toString(36).substr(2, 6) 
         };
 
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
-        updatePointsDisplay(); 
-        renderWallet(); 
-        openExistingTicket(tickets.length - 1);
+        updatePointsDisplay(); renderWallet(); openExistingTicket(tickets.length - 1);
     }
 
     function renderWallet() {
         const list = document.getElementById('ticket-list');
         list.innerHTML = "";
         tickets.forEach((t, i) => {
-            list.innerHTML += `<div class="ticket-bar">
-                <div class="ticket-info" onclick="openExistingTicket(${i})">
+            list.innerHTML += `<div class="ticket-bar" onclick="openExistingTicket(${i})">
+                <div class="ticket-info">
                     <b>${t.movie}</b><br><small>${t.time} • ${t.seats} Seats (${t.method})</small>
                 </div>
-                <div class="delete-btn" onclick="deleteWithRefund(${i})">×</div>
+                <div class="delete-btn" onclick="event.stopPropagation(); deleteWithRefund(${i})">×</div>
             </div>`;
         });
     }
 
     function openExistingTicket(i) {
         const t = tickets[i];
-        document.getElementById('type-banner').innerText = t.method === 'CASH' ? "💎 CASH ENTRY" : "🎫 POINTS ENTRY";
-        document.getElementById('ticket-details').innerHTML = `<b>${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}<br>Total: ${t.cost} ${t.method === 'CASH' ? 'Rs' : 'Pts'}`;
-        document.getElementById("qrcode").innerHTML = "";
         
-        const qrData = `PVR|${t.id}|${t.method}|${t.cost}`;
-        new QRCode(document.getElementById("qrcode"), { text: qrData, width: 200, height: 200 });
+        // Setting the requested price labels
+        const desc = document.getElementById('price-desc');
+        const cashInfo = document.getElementById('cash-payment-info');
+        
+        if(t.method === 'CASH') {
+            desc.innerText = "300 cash";
+            cashInfo.style.display = "block";
+            cashInfo.innerText = `COLLECT ₹${t.cost}`;
+        } else {
+            desc.innerText = "100 points per seat";
+            cashInfo.style.display = "none";
+        }
 
-        document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeemProcess(${i})">REDEEM & DELETE</span>`;
+        document.getElementById('ticket-details').innerHTML = `
+            <b>${t.movie}</b><br>
+            Seats: ${t.seats} | Time: ${t.time}<br>
+            <b>TOTAL: ${t.cost} ${t.method}</b>
+        `;
+
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: t.id, width: 170, height: 170 });
+
+        document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeem(${i})">REDEEM & DELETE</span>`;
         document.getElementById('ticket-page').style.display = 'flex';
-        document.getElementById('ticket-page').scrollTop = 0;
     }
 
-    function redeemProcess(i) {
-        const t = tickets[i];
-        if(t.method === 'CASH') {
-            alert(`💰 PAYMENT REQUIRED\nPlease collect: ₹${t.cost} Cash from user.`);
-        }
+    function redeem(i) {
         tickets.splice(i, 1);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         renderWallet();
         closeTicket();
-        alert(`✅ ${t.method} Ticket Redeemed successfully.`);
-    }
-
-    let scanner;
-    function openScanner() {
-        document.getElementById('scanner-page').style.display = 'flex';
-        scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
-        scanner.render((text) => {
-            const parts = text.split('|');
-            if(parts[0] !== 'PVR') return alert("Invalid QR");
-            
-            const id = parts[1];
-            const idx = tickets.findIndex(t => t.id === id);
-            if(idx !== -1) {
-                scanner.clear();
-                document.getElementById('scanner-page').style.display = 'none';
-                redeemProcess(idx);
-            } else {
-                alert("❌ Ticket Not Found");
-            }
-        });
+        alert("✅ Ticket Redeemed");
     }
 
     function deleteWithRefund(i) {
-        if(confirm("Cancel and Refund?")) {
-            if(tickets[i].method === 'POINTS') {
-                balance += tickets[i].cost;
-            }
+        if(confirm("Delete?")) {
+            if(tickets[i].method === 'POINTS') balance += tickets[i].cost;
             tickets.splice(i, 1);
-            updatePointsDisplay(); 
-            renderWallet();
+            updatePointsDisplay(); renderWallet();
         }
     }
 
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
-    function closeScanner() { if(scanner) scanner.clear(); document.getElementById('scanner-page').style.display = 'none'; }
-    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Points added"); adminClicks=0; } }
+    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Pts"); adminClicks=0; } }
 </script>
 </body>
 </html>
