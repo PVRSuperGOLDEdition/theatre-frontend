@@ -11,16 +11,16 @@
         #booking-page { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; box-sizing: border-box; min-height: 100vh; }
         .container { width: 100%; max-width: 400px; text-align: center; }
 
-        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 22px; margin-bottom: 25px; cursor: pointer; }
+        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 22px; margin-bottom: 25px; cursor: pointer; user-select: none; }
 
-        .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 12px; margin-bottom: 20px; cursor: pointer; }
+        .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 12px; margin-bottom: 20px; cursor: pointer; user-select: none; }
         .balance-value { font-size: 18px; color: var(--gold); font-weight: bold; }
 
         .movie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* WIDTH FIX: Precise 50/50 split using calc to account for gap */
+        /* WIDTH & HEIGHT FIX */
         .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
         .input-box { width: calc(50% - 5px); text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
@@ -64,8 +64,11 @@
 
 <div id="booking-page">
     <div class="container">
-        <h1 onclick="adminPointsAdd()">PVR Super Gold</h1>
-        <div class="balance-card"><div class="balance-value" id="balanceText">100 Points</div></div>
+        <h1 onclick="adminRefill()">PVR Super Gold</h1>
+        
+        <div class="balance-card" onclick="adminRefill()">
+            <div class="balance-value" id="balanceText">Loading...</div>
+        </div>
 
         <div class="movie-grid">
             <div class="movie-option" onclick="selectMovie('Avatar 2', this)">Avatar 2</div>
@@ -104,7 +107,7 @@
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
     let selectedMovieName = "";
     let paymentMethod = 'points';
-    let adminClicks = 0;
+    let clickCounter = 0;
 
     window.onload = () => { updatePointsDisplay(); renderWallet(); calculateTotal(); };
 
@@ -123,7 +126,6 @@
 
     function calculateTotal() { 
         const s = parseInt(document.getElementById('seats').value) || 0; 
-        // UPDATED PRICE: 100 for Points, 150 for Cash
         document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 100 + ' Points' : s * 150 + ' Cash'}`; 
     }
 
@@ -179,9 +181,8 @@
 
     function deleteWithRefund(i) {
         if(confirm("Cancel and Refund?")) {
-            // FIXED REFUND LOGIC: Ensures point addition works every time
             if(tickets[i].method === 'POINTS') {
-                balance = balance + tickets[i].cost;
+                balance += tickets[i].cost;
                 updatePointsDisplay();
             }
             tickets.splice(i, 1);
@@ -200,13 +201,14 @@
 
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
     
-    function adminPointsAdd() { 
-        adminClicks++; 
-        if(adminClicks >= 5) { 
-            balance += 100; 
+    // RESTORED: Click either the Title or Balance 5 times to refill
+    function adminRefill() { 
+        clickCounter++; 
+        if(clickCounter >= 5) { 
+            balance += 500; // Refill 500 points
             updatePointsDisplay(); 
-            alert("+100 Pts Added"); 
-            adminClicks = 0; 
+            alert("✅ Admin: +500 Pts Added"); 
+            clickCounter = 0; 
         } 
     }
 </script>
