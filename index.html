@@ -1,89 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>PVR Private Theatre Booking</title>
+    <title>PVR Super Gold</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
-        .card { background: #1e1e1e; padding: 30px; border-radius: 20px; display: inline-block; box-shadow: 0 15px 35px rgba(0,0,0,0.7); width: 90%; max-width: 400px; border: 1px solid #333; }
-        h1 { color: #e50914; margin-bottom: 5px; }
-        input, select, button { margin: 12px 0; padding: 14px; border-radius: 10px; border: 1px solid #444; width: 100%; box-sizing: border-box; background: #2b2b2b; color: white; font-size: 16px; }
-        button { background: #e50914; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 20px; }
-        button:hover { background: #ff0a16; transform: scale(1.02); }
-        #qr-result img { margin-top: 25px; border: 8px solid white; border-radius: 12px; width: 220px; }
-        .points-label { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px; color: #aaa; margin-top: 10px; }
-        input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        body { font-family: 'Georgia', serif; text-align: center; background: #000000; color: white; padding: 20px; }
+        .card { background: #111111; padding: 35px; border-radius: 15px; display: inline-block; width: 95%; max-width: 450px; border: 2px solid #D4AF37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        
+        /* Gold Text Styling */
+        h1 { color: #D4AF37; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 5px; font-size: 28px; }
+        .gold-text { color: #D4AF37; font-weight: bold; }
+        
+        select, button { margin: 15px 0; padding: 14px; border-radius: 5px; border: 1px solid #D4AF37; width: 100%; background: #000; color: #D4AF37; font-size: 16px; font-family: inherit; }
+        
+        button { background: #D4AF37; color: #000; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: #FafAD2; color: #000; }
+        
+        .points-box { background: #1a1a1a; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #333; }
+        #qr-result img { margin-top: 25px; border: 5px solid #D4AF37; border-radius: 5px; width: 220px; background: white; padding: 10px; }
+        
+        p { color: #999; font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="card">
-        <h1>🎬 PVR Private Cabin</h1>
-        <p style="color: #888;">Premium Cinema Experience</p>
+        <h1>PVR Super Gold</h1>
+        <p>Private Cinema Experience</p>
         
-        <input type="email" id="email" placeholder="Your Email (Get 100 Free Points)">
-        
-        <select id="movie">
-            <option value="Avatar: Way of Water">Avatar: The Way of Water</option>
-            <option value="The Batman">The Batman</option>
-            <option value="Animal">Animal (2024)</option>
-            <option value="Pushpa 2">Pushpa 2: The Rule</option>
-        </select>
-        
-        <input type="number" id="seats" placeholder="Number of Seats" min="1" value="1">
-        
-        <div class="points-label">
-            <input type="checkbox" id="usePoints">
-            <span>Use 100 Points for FREE booking</span>
+        <div class="points-box">
+            <span id="displayPoints" class="gold-text">Balance: 100 Points</span>
         </div>
 
-        <button onclick="bookNow()">Confirm Booking & Get QR</button>
+        <select id="movie">
+            <option value="Avatar: Way of Water">Avatar: The Way of Water</option>
+            <option value="Gladiator II">Gladiator II</option>
+            <option value="The Dark Knight">The Dark Knight</option>
+            <option value="Inception">Inception</option>
+        </select>
+        
+        <p class="gold-text">Price: 100 Points per Cabin</p>
+
+        <button id="bookBtn" onclick="bookNow()">Book Private Cabin</button>
         
         <div id="qr-result"></div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        async function bookNow() {
-            const btn = document.querySelector('button');
-            const qrDiv = document.getElementById('qr-result');
-            btn.innerText = "Processing Ticket...";
-            btn.style.opacity = "0.5";
-            
-            const data = {
-                email: document.getElementById('email').value,
-                movie: document.getElementById('movie').value,
-                seats: document.getElementById('seats').value,
-                usePoints: document.getElementById('usePoints').checked
-            };
+        let points = 100;
 
-            if(!data.email) {
-                alert("Please enter your email!");
-                btn.innerText = "Confirm Booking & Get QR";
-                btn.style.opacity = "1";
+        function bookNow() {
+            if (points < 100) {
+                alert("Insufficient Points");
                 return;
             }
 
-            try {
-                // Connecting to your live Vercel backend
-                const response = await fetch('https://theatre-backend-9ddk.vercel.app/api/book', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
+            const movie = document.getElementById('movie').value;
+            const qrDiv = document.getElementById('qr-result');
+            const btn = document.getElementById('bookBtn');
 
-                const result = await response.json();
-                if(result.success) {
-                    qrDiv.innerHTML = `
-                        <h3 style="color: #4bb543; margin-top: 20px;">Booking Successful!</h3>
-                        <img src="${result.qr}">
-                        <p style="color: #aaa; font-size: 12px;">Scan this at the PVR Gold entrance</p>
-                    `;
-                }
-            } catch (err) {
-                alert("Server connection error. Please try again later.");
-            }
+            // Deduct Points
+            points -= 100;
+            document.getElementById('displayPoints').innerText = `Balance: ${points} Points`;
+
+            // Display Success
+            qrDiv.innerHTML = `<h3 class="gold-text" style="margin-top: 20px;">Booking Confirmed</h3><div id="qrcode" style="display: flex; justify-content: center;"></div>`;
             
-            btn.innerText = "Confirm Booking & Get QR";
-            btn.style.opacity = "1";
+            // Generate QR instantly
+            new QRCode(document.getElementById("qrcode"), {
+                text: `PVR-SUPER-GOLD-CABIN: ${movie}`,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff"
+            });
+
+            btn.disabled = true;
+            btn.innerText = "Reserved Successfully";
+            btn.style.background = "#333";
+            btn.style.color = "#777";
+            btn.style.border = "1px solid #444";
         }
     </script>
 </body>
 </html>
+
+
+        
