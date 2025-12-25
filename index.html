@@ -147,7 +147,7 @@
 
     function openExistingTicket(i) {
         const t = tickets[i];
-        document.getElementById('type-banner').innerText = t.method === 'CASH' ? "💎 CASH ENTRY" : "🎫 POINTS ENTRY";
+        document.getElementById('type-banner').innerText = t.method === 'CASH' ? "CASH ENTRY" : "POINTS ENTRY";
         document.getElementById('ticket-details').innerHTML = `<b>${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}`;
         document.getElementById("qrcode").innerHTML = "";
         
