@@ -6,7 +6,7 @@
     <title>PVR Super Gold | Premium</title>
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --error: #ff4d4d; }
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: white; overflow: hidden; height: 100%; }
+        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow: hidden; height: 100%; }
         
         #booking-page { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; box-sizing: border-box; }
         .container { width: 100%; max-width: 380px; text-align: center; }
@@ -19,8 +19,8 @@
             padding: 20px; border-radius: 16px; margin-bottom: 25px; cursor: pointer;
         }
 
-        .balance-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
-        .balance-value { font-size: 22px; color: var(--gold); font-weight: bold; }
+        .balance-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px; pointer-events: none; }
+        .balance-value { font-size: 22px; color: var(--gold); font-weight: bold; pointer-events: none; }
 
         .input-box { margin-bottom: 18px; text-align: left; }
         label { display: block; font-size: 10px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; font-weight: bold; }
@@ -39,15 +39,12 @@
 
         #price-display { color: var(--gold); font-size: 14px; margin-top: 10px; font-weight: bold; }
 
-        /* Active Ticket Bar */
+        /* Booked Movie Bar Style */
         #active-ticket-bar {
-            display: none; width: 100%; background: var(--gold); color: black;
-            padding: 15px; border-radius: 12px; margin-top: 20px; cursor: pointer;
-            font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
-            animation: pulse 2s infinite;
+            display: none; width: 100%; background: #1a1a1a; border: 1px solid var(--gold);
+            color: var(--gold); padding: 15px; border-radius: 12px; margin-top: 25px; 
+            cursor: pointer; font-weight: bold; text-align: center;
         }
-
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
         #error-display {
             color: var(--error); font-size: 13px; margin-top: 15px; display: none;
@@ -65,13 +62,13 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; color: #000; display: none;
             flex-direction: column; align-items: center; justify-content: center;
-            z-index: 100; animation: fadeIn 0.4s ease;
+            z-index: 100; animation: fadeIn 0.3s ease;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .ticket-title { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 5px; }
-        #qrcode { padding: 15px; background: #fff; margin-bottom: 30px; border: 1px solid #eee; }
+        #qrcode { padding: 15px; background: #fff; margin-bottom: 30px; }
         
         .details-grid { width: 85%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
         .detail-item { border-left: 1px solid #ddd; padding-left: 10px; }
@@ -87,7 +84,7 @@
         <div class="container">
             <h1>PVR Super Gold</h1>
 
-            <div class="balance-card" onclick="adminReset()">
+            <div class="balance-card" onclick="adminPointsReset()">
                 <div class="balance-label">Device Balance</div>
                 <div class="balance-value" id="balanceText">100 Points</div>
             </div>
@@ -117,10 +114,10 @@
 
             <div id="error-display">Insufficient Points for this Device.</div>
 
-            <button class="confirm-btn" id="mainBookBtn" onclick="openTicket()">Confirm Booking</button>
+            <button class="confirm-btn" onclick="openTicket()">Confirm Booking</button>
 
             <div id="active-ticket-bar" onclick="showExistingTicket()">
-                Ticket: <span id="booked-movie-name">None</span>
+                VIEW TICKET: <span id="booked-movie-name"></span>
             </div>
         </div>
     </div>
@@ -139,25 +136,23 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
+        let balance = parseInt(localStorage.getItem('pvr_balance'));
+        if (isNaN(balance)) { balance = 100; localStorage.setItem('pvr_balance', 100); }
+        
         let method = 'points';
         let clickCount = 0;
-        let currentTicket = JSON.parse(localStorage.getItem('active_ticket')) || null;
+        let activeTicket = JSON.parse(localStorage.getItem('pvr_ticket'));
 
         window.onload = () => {
             document.getElementById('balanceText').innerText = `${balance} Points`;
-            if(currentTicket) { showTicketBar(); }
+            if (activeTicket) { displayTicketBar(); }
             updateUI();
         };
 
         function updateUI() {
             const seats = parseInt(document.getElementById('seats').value) || 1;
-            const display = document.getElementById('price-display');
-            if (method === 'points') {
-                display.innerText = `Price: ${seats * 100} Points`;
-            } else {
-                display.innerText = `Price: ₹${seats * 500} Cash`;
-            }
+            const priceDiv = document.getElementById('price-display');
+            priceDiv.innerText = method === 'points' ? `Price: ${seats * 100} Points` : `Price: ₹${seats * 500} Cash`;
             document.getElementById('error-display').style.display = 'none';
         }
 
@@ -184,44 +179,44 @@
                 document.getElementById('balanceText').innerText = `${balance} Points`;
             }
 
-            // Save Ticket Data
-            currentTicket = { movie, seats, method: method.toUpperCase() };
-            localStorage.setItem('active_ticket', JSON.stringify(currentTicket));
+            activeTicket = { movie, seats, method: method.toUpperCase() };
+            localStorage.setItem('pvr_ticket', JSON.stringify(activeTicket));
             
             showExistingTicket();
-            showTicketBar();
+            displayTicketBar();
         }
 
-        function showTicketBar() {
-            document.getElementById('active-ticket-bar').style.display = 'block';
-            document.getElementById('booked-movie-name').innerText = currentTicket.movie;
+        function displayTicketBar() {
+            const bar = document.getElementById('active-ticket-bar');
+            bar.style.display = 'block';
+            document.getElementById('booked-movie-name').innerText = activeTicket.movie;
         }
 
         function showExistingTicket() {
-            if(!currentTicket) return;
-            document.getElementById('t-movie').innerText = currentTicket.movie;
-            document.getElementById('t-seats').innerText = currentTicket.seats;
-            document.getElementById('t-method').innerText = currentTicket.method;
+            if (!activeTicket) return;
+            document.getElementById('t-movie').innerText = activeTicket.movie;
+            document.getElementById('t-seats').innerText = activeTicket.seats;
+            document.getElementById('t-method').innerText = activeTicket.method;
 
             document.getElementById("qrcode").innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
-                text: `PVR-SG|${currentTicket.movie}|SEATS:${currentTicket.seats}|PAY:${currentTicket.method}`,
+                text: `PVR-TICKET|${activeTicket.movie}|SEATS:${activeTicket.seats}`,
                 width: 180, height: 180
             });
             document.getElementById('ticket-page').style.display = 'flex';
         }
 
-        function closeTicket() {
-            document.getElementById('ticket-page').style.display = 'none';
-        }
+        function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
 
-        function adminReset() {
+        // ADMIN RESET: Only resets points, leaves tickets alone
+        function adminPointsReset() {
             clickCount++;
             if (clickCount >= 5) {
                 balance = 100;
-                localStorage.clear();
                 localStorage.setItem('pvr_balance', 100);
-                location.reload();
+                document.getElementById('balanceText').innerText = `100 Points`;
+                alert("Balance Refilled to 100 Points");
+                clickCount = 0;
             }
         }
     </script>
