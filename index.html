@@ -20,7 +20,7 @@
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* WIDTH & HEIGHT FIX */
+        /* WIDTH FIX: Precise 50/50 split */
         .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
         .input-box { width: calc(50% - 5px); text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
@@ -73,7 +73,7 @@
         <div class="movie-grid">
             <div class="movie-option" onclick="selectMovie('Dhurandhar', this)">Dhurandhar</div>
             <div class="movie-option" onclick="selectMovie('The Batman', this)">The Batman</div>
-            <div class="movie-option" onclick="selectMovie('Gladiator II', this)">Gladiator II</div>
+            <div class="movie-option" onclick="selectMovie('Stranger Things S5', this)">Stranger Things S5</div>
             <div class="movie-option" onclick="selectMovie('Animal', this)">Animal</div>
         </div>
 
@@ -94,7 +94,7 @@
 </div>
 
 <div id="ticket-page">
-    <div style="font-weight: 900; letter-spacing: 4px; font-size: 18px; margin-bottom: 25px;"TICKET"</div>
+    <div style="font-weight: 900; letter-spacing: 4px; font-size: 18px; margin-bottom: 25px;">ENTRY PASS</div>
     <div class="qr-frame"><div class="scan-line"></div><div id="qrcode"></div></div>
     <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8; margin-top: 10px;"></div>
     <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:30px; border-radius: 50px;" onclick="closeTicket()">Back</button>
@@ -201,11 +201,10 @@
 
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
     
-    // RESTORED: Click either the Title or Balance 5 times to refill
     function adminRefill() { 
         clickCounter++; 
         if(clickCounter >= 5) { 
-            balance += 500; // Refill 500 points
+            balance += 500; 
             updatePointsDisplay(); 
             alert("✅ Admin: +500 Pts Added"); 
             clickCounter = 0; 
