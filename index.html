@@ -32,9 +32,10 @@
         input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
 
         /* Payment Buttons */
-        .method-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+        .method-toggle { display: flex; gap: 10px; margin-bottom: 10px; }
         .m-btn { flex: 1; padding: 12px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; font-size: 14px; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
+        .price-info { font-size: 12px; color: #666; margin-bottom: 20px; }
 
         /* Wallet Section */
         #wallet-section { width: 100%; margin-top: 25px; text-align: left; }
@@ -44,16 +45,15 @@
             border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
         }
         .ticket-info { flex-grow: 1; cursor: pointer; }
-        .delete-btn { color: #555; font-size: 18px; padding: 0 5px; cursor: pointer; margin-left: 10px; }
-        .delete-btn:hover { color: var(--error); }
+        .delete-btn { color: #555; font-size: 20px; padding: 5px 10px; cursor: pointer; margin-left: 10px; }
 
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; font-size: 15px; }
 
-        /* TICKET OVERLAY (No Refresh) */
+        /* TICKET OVERLAY */
         #ticket-page {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000;
             display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
-            animation: slideUp 0.4s ease-out;
+            animation: slideUp 0.3s ease-out;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         
@@ -67,7 +67,7 @@
     <div class="container">
         <h1>PVR Super Gold</h1>
 
-        <div class="balance-card" onclick="adminPointsReset()">
+        <div class="balance-card" onclick="adminPointsAdd()">
             <div class="balance-value" id="balanceText">100 Points</div>
         </div>
 
@@ -94,6 +94,7 @@
             <button class="m-btn active" id="ptsBtn" onclick="setMethod('points')">Points</button>
             <button class="m-btn" id="cashBtn" onclick="setMethod('cash')">Cash</button>
         </div>
+        <div class="price-info">Price: 300 Points per seat</div>
 
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
@@ -113,7 +114,9 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
-    let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
+    let balance = parseInt(localStorage.getItem('pvr_balance'));
+    if (isNaN(balance)) { balance = 100; localStorage.setItem('pvr_balance', 100); }
+    
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
     let selectedMovieName = "";
     let paymentMethod = 'points';
@@ -138,6 +141,7 @@
 
     function updatePointsDisplay() {
         document.getElementById('balanceText').innerText = `${balance} Points`;
+        localStorage.setItem('pvr_balance', balance);
     }
 
     function renderWallet() {
@@ -151,7 +155,7 @@
             bar.innerHTML = `
                 <div class="ticket-info" onclick="openExistingTicket(${index})">
                     <span>${t.movie}</span><br>
-                    <small style="color:#666">${t.time} • ${t.seats} Seats</small>
+                    <small style="color:#666">${t.time} • ${t.seats} Seats (${t.method})</small>
                 </div>
                 <div class="delete-btn" onclick="deleteTicket(${index})">×</div>
             `;
@@ -162,15 +166,15 @@
     function bookNow() {
         const seatCount = parseInt(document.getElementById('seats').value);
         const showTime = document.getElementById('startTime').value;
-        const totalCost = seatCount * 100;
+        const totalCost = seatCount * 300;
 
         if(!selectedMovieName) { alert("Please select a movie."); return; }
-        if(tickets.length >= 3) { alert("Wallet full. Delete a ticket first."); return; }
+        if(tickets.length >= 3) { alert("Wallet full. Cancel a ticket first."); return; }
         
         if(paymentMethod === 'points') {
             if(balance < totalCost) { alert("Insufficient Points."); return; }
             balance -= totalCost;
-            localStorage.setItem('pvr_balance', balance);
+            updatePointsDisplay();
         }
 
         const newTicket = { 
@@ -178,13 +182,13 @@
             seats: seatCount, 
             time: showTime, 
             method: paymentMethod.toUpperCase(),
+            cost: totalCost,
             id: Math.random().toString(36).substr(2, 6) 
         };
 
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         
-        updatePointsDisplay();
         renderWallet();
         openExistingTicket(tickets.length - 1);
     }
@@ -197,35 +201,36 @@
             <b>SEATS:</b> ${t.seats} | <b>TIME:</b> ${t.time}<br>
             <b>PAYMENT:</b> ${t.method}
         `;
-        
         document.getElementById("qrcode").innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { 
             text: `PVR-SG|${t.id}|${t.movie}|${t.time}`, 
             width: 200, height: 200 
         });
-        
         document.getElementById('ticket-page').style.display = 'flex';
     }
 
     function deleteTicket(index) {
-        if(confirm("Cancel this booking?")) {
+        const t = tickets[index];
+        if(confirm("Cancel booking? You will receive a full refund of " + (t.method === 'POINTS' ? t.cost : 'Cash') + ".")) {
+            if(t.method === 'POINTS') {
+                balance += t.cost;
+                updatePointsDisplay();
+            }
             tickets.splice(index, 1);
             localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
             renderWallet();
         }
     }
 
-    function closeTicket() {
-        document.getElementById('ticket-page').style.display = 'none';
-    }
+    function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
 
-    function adminPointsReset() {
+    // ADDITIVE ADMIN: Adds 100 points every 5 clicks
+    function adminPointsAdd() {
         adminClicks++;
         if (adminClicks >= 5) {
-            balance = 100;
-            localStorage.setItem('pvr_balance', 100);
+            balance += 100;
             updatePointsDisplay();
-            alert("Admin: Points refilled to 100.");
+            alert("Admin: +100 Points Added!");
             adminClicks = 0;
         }
     }
