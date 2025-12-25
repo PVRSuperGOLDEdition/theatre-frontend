@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PVR Super Gold | Official</title>
+    <title>PVR Super Gold | Rates</title>
     <style>
-        :root { --gold: #D4AF37; --bg: #050505; --card-bg: #111; --error: #ff4d4d; }
+        :root { --gold: #D4AF37; --bg: #050505; --card-bg: #111; --error: #ff4d4d; --success: #2ecc71; }
         body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; height: 100%; overflow-x: hidden; }
         
         .container { width: 100%; max-width: 400px; text-align: center; margin: auto; padding: 20px; box-sizing: border-box; }
         h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 22px; cursor: pointer; }
+
+        /* Rates Table */
+        .rates-info { font-size: 10px; color: #666; display: flex; justify-content: space-around; margin-bottom: 15px; text-transform: uppercase; }
 
         .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 12px; margin-bottom: 20px; }
         .balance-value { font-size: 18px; color: var(--gold); font-weight: bold; }
@@ -22,43 +25,36 @@
         input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
 
         .method-toggle { display: flex; gap: 10px; margin-bottom: 5px; }
-        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; font-weight: bold; }
+        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
         
         #total-calc { font-size: 14px; color: var(--gold); margin: 15px 0; font-weight: bold; background: rgba(212,175,55,0.05); padding: 10px; border-radius: 8px; }
 
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
 
-        /* --- RED FLASHING SEAL --- */
-        .seal-wrapper { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; margin: 20px auto; }
+        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
         
-        .flash-ring { 
-            position: absolute; width: 100%; height: 100%; border: 4px solid var(--error); border-radius: 50%; 
-            animation: pulse-red 1s infinite alternate; box-sizing: border-box; 
-        }
-        
-        @keyframes pulse-red {
-            from { transform: scale(0.95); opacity: 0.3; box-shadow: 0 0 0px var(--error); }
-            to { transform: scale(1.05); opacity: 1; box-shadow: 0 0 20px var(--error); }
-        }
+        /* Overlays */
+        #ticket-page, #scanner-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
+        #scanner-page { background: #000; color: #fff; justify-content: center; }
+        #qrcode { background: #fff; padding: 10px; margin-bottom: 20px; }
+        #reader { width: 300px; border: 2px solid var(--gold); border-radius: 10px; overflow: hidden; }
 
-        #qrcode { background: #fff; padding: 15px; border-radius: 10px; z-index: 5; }
-
-        /* Ticket View Overlays */
-        #ticket-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
-        
-        .price-badge { background: #000; color: #fff; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: bold; margin-bottom: 10px; }
-        
-        .gate-control { margin-top: 60px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
-        .redeem-txt { color: #888; font-size: 13px; cursor: pointer; text-decoration: underline; font-weight: bold; }
-
-        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        /* Payment Alert for Cash */
+        .payment-alert { background: #fff5f5; border: 2px solid var(--error); color: var(--error); padding: 15px; border-radius: 10px; margin: 15px; width: 80%; font-weight: bold; display: none; }
+        .gate-control { margin-top: 50px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
+        .redeem-txt { color: #888; font-size: 12px; cursor: pointer; text-decoration: underline; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container" id="booking-page">
     <h1 onclick="openScanner()">PVR Super Gold</h1>
+
+    <div class="rates-info">
+        <span>Pts: 100/seat</span>
+        <span>Cash: 300/seat</span>
+    </div>
 
     <div class="balance-card" onclick="adminPointsAdd()">
         <div class="balance-value" id="balanceText">100 Points</div>
@@ -84,31 +80,36 @@
     <div id="total-calc">Total: 100 Points</div>
     <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
-    <div id="ticket-list" style="margin-top:20px; width:100%;"></div>
+    <div id="ticket-list" style="margin-top:20px; text-align:left; width:100%;"></div>
 </div>
 
 <div id="ticket-page">
-    <div style="font-weight: 900; letter-spacing: 4px; font-size: 18px; margin-bottom: 5px;">OFFICIAL ENTRY</div>
+    <div style="font-weight: 900; letter-spacing: 3px; font-size: 18px; margin-bottom: 20px;">ENTRY PASS</div>
     
-    <div id="price-type-tag" class="price-badge"></div>
-
-    <div class="seal-wrapper">
-        <div class="flash-ring"></div>
-        <div id="qrcode"></div>
+    <div id="cash-alert" class="payment-alert">
+        ⚠️ COLLECT PAYMENT<br>
+        <span id="cash-amount-text" style="font-size: 24px;"></span>
     </div>
-    
-    <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8;"></div>
-    
-    <div id="cash-payment-text" style="color: var(--error); font-weight: 900; font-size: 22px; margin: 10px 0; display: none;"></div>
 
-    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px; border-radius: 50px;" onclick="closeTicket()">Close</button>
+    <div id="qrcode"></div>
+    
+    <div id="ticket-details" style="text-align: center; font-size: 14px; line-height: 1.6;"></div>
+    
+    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px;" onclick="closeTicket()">Back</button>
 
     <div class="gate-control">
         <div id="redeem-btn-container"></div>
     </div>
 </div>
 
+<div id="scanner-page">
+    <h2 style="color:var(--gold)">GATE SCANNER</h2>
+    <div id="reader"></div>
+    <button class="confirm-btn" style="width:200px; margin-top:20px;" onclick="closeScanner()">Cancel</button>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
     let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
@@ -120,10 +121,11 @@
 
     function selectMovie(name, el) { selectedMovieName = name; document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected')); el.classList.add('selected'); }
     function setMethod(m) { paymentMethod = m; document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); calculateTotal(); }
+    
     function calculateTotal() { 
         const s = parseInt(document.getElementById('seats').value) || 0; 
-        const t = paymentMethod === 'points' ? s * 100 : s * 300;
-        document.getElementById('total-calc').innerText = `Total: ${t} ${paymentMethod.toUpperCase()}`; 
+        const total = paymentMethod === 'points' ? s * 100 : s * 300;
+        document.getElementById('total-calc').innerText = `Total: ${total} ${paymentMethod === 'points' ? 'Points' : 'Cash'}`; 
     }
 
     function updatePointsDisplay() { document.getElementById('balanceText').innerText = `${balance} Points`; localStorage.setItem('pvr_balance', balance); }
@@ -152,51 +154,77 @@
         const list = document.getElementById('ticket-list');
         list.innerHTML = "";
         tickets.forEach((t, i) => {
-            list.innerHTML += `<div class="ticket-bar" onclick="openExistingTicket(${i})">
-                <div><b>${t.movie}</b><br><small>${t.time} • ${t.seats} Seats</small></div>
-                <div style="color:var(--gold); font-weight:bold;">${t.method}</div>
+            list.innerHTML += `<div class="ticket-bar">
+                <div class="ticket-info" onclick="openExistingTicket(${i})">
+                    <b>${t.movie}</b><br><small>${t.time} • ${t.seats} Seats (${t.method})</small>
+                </div>
+                <div style="color:#555; cursor:pointer;" onclick="deleteHard(${i})">×</div>
             </div>`;
         });
     }
 
     function openExistingTicket(i) {
         const t = tickets[i];
+        const alertBox = document.getElementById('cash-alert');
         
-        // Show the 100 Points / 300 Cash labels
-        const tag = document.getElementById('price-type-tag');
-        tag.innerText = t.method === 'CASH' ? "RATE: 300 CASH / SEAT" : "RATE: 100 POINTS / SEAT";
-        
-        const cashText = document.getElementById('cash-payment-text');
-        if(t.method === 'CASH') {
-            cashText.style.display = "block";
-            cashText.innerText = `PAY ₹${t.cost}`;
-        } else {
-            cashText.style.display = "none";
-        }
-
+        // Show Rates and Payment Info
         document.getElementById('ticket-details').innerHTML = `
             <b>MOVIE:</b> ${t.movie}<br>
-            <b>SEATS:</b> ${t.seats} | <b>TIME:</b> ${t.time}<br>
-            <b>TOTAL DUE:</b> ${t.cost} ${t.method}
+            <b>TIME:</b> ${t.time} | <b>SEATS:</b> ${t.seats}<br>
+            <b>RATE:</b> ${t.rate} / seat<br>
+            <span style="font-size:18px; color:var(--gold)"><b>TOTAL: ${t.cost} ${t.method}</b></span>
         `;
 
-        document.getElementById("qrcode").innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: t.id, width: 200, height: 200 });
+        // Handle Cash Alert Visibility
+        if(t.method === 'CASH') {
+            alertBox.style.display = "block";
+            document.getElementById('cash-amount-text').innerText = "₹" + t.cost;
+        } else {
+            alertBox.style.display = "none";
+        }
 
-        document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeem(${i})">REDEEM & DELETE</span>`;
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: `PVR|${t.id}|${t.method}|${t.cost}`, width: 200, height: 200 });
+
+        document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeemProcess(${i})">REDEEM & DELETE</span>`;
         document.getElementById('ticket-page').style.display = 'flex';
+        document.getElementById('ticket-page').scrollTop = 0;
     }
 
-    function redeem(i) {
+    function redeemProcess(i) {
+        const t = tickets[i];
+        if(t.method === 'CASH') {
+            if(!confirm(`CONFIRM: Have you collected ₹${t.cost} cash?`)) return;
+        }
         tickets.splice(i, 1);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         renderWallet();
         closeTicket();
-        alert("✅ Ticket Redeemed");
+        alert("✅ Ticket Redeemed Successfully.");
     }
 
+    let scanner;
+    function openScanner() {
+        document.getElementById('scanner-page').style.display = 'flex';
+        scanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 250 });
+        scanner.render((text) => {
+            const parts = text.split('|');
+            if(parts[0] !== 'PVR') return alert("Invalid QR");
+            const idx = tickets.findIndex(t => t.id === parts[1]);
+            if(idx !== -1) {
+                scanner.clear();
+                document.getElementById('scanner-page').style.display = 'none';
+                redeemProcess(idx);
+            } else {
+                alert("❌ Ticket Not Found");
+            }
+        });
+    }
+
+    function deleteHard(i) { if(confirm("Delete without refund?")) { tickets.splice(i,1); localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); renderWallet(); } }
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
-    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Pts"); adminClicks=0; } }
+    function closeScanner() { if(scanner) scanner.clear(); document.getElementById('scanner-page').style.display = 'none'; }
+    function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Points"); adminClicks=0; } }
 </script>
 </body>
 </html>
