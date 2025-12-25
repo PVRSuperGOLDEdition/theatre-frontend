@@ -20,9 +20,9 @@
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* FIXED WIDTH & HEIGHT: Ensures Seats and Time are identical */
-        .input-row { display: flex; width: 100%; gap: 12px; margin-bottom: 15px; }
-        .input-box { flex: 1; text-align: left; min-width: 0; } /* min-width: 0 prevents flex overflow */
+        /* WIDTH FIX: Uses 50% calculation minus half the gap for pixel-perfect width */
+        .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
+        .input-box { width: calc(50% - 5px); text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
         
         input { 
@@ -167,7 +167,19 @@
     }
 
     function redeem(i) { tickets.splice(i, 1); localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); renderWallet(); closeTicket(); alert("✅ Redeemed"); }
-    function deleteWithRefund(i) { if(confirm("Delete?")) { if(tickets[i].method === 'POINTS') balance += tickets[i].cost; tickets.splice(i, 1); updatePointsDisplay(); renderWallet(); } }
+    
+    // RESTORED: Refund Function
+    function deleteWithRefund(i) { 
+        if(confirm("Cancel and Refund?")) { 
+            if(tickets[i].method === 'POINTS') {
+                balance += tickets[i].cost; 
+            }
+            tickets.splice(i, 1); 
+            updatePointsDisplay(); 
+            renderWallet(); 
+        } 
+    }
+
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
     function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Pts"); adminClicks=0; } }
 </script>
