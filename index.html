@@ -35,7 +35,7 @@
         .method-toggle { display: flex; gap: 10px; margin-bottom: 10px; }
         .m-btn { flex: 1; padding: 12px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; font-size: 14px; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
-        .price-info { font-size: 12px; color: #666; margin-bottom: 20px; }
+        #price-tag { font-size: 13px; color: var(--gold); margin-bottom: 20px; font-weight: bold; }
 
         /* Wallet Section */
         #wallet-section { width: 100%; margin-top: 25px; text-align: left; }
@@ -82,7 +82,7 @@
         <div class="input-row">
             <div class="input-box">
                 <label>Seats</label>
-                <input type="number" id="seats" value="1" min="1">
+                <input type="number" id="seats" value="1" min="1" oninput="updatePrice()">
             </div>
             <div class="input-box">
                 <label>Show Time</label>
@@ -94,7 +94,7 @@
             <button class="m-btn active" id="ptsBtn" onclick="setMethod('points')">Points</button>
             <button class="m-btn" id="cashBtn" onclick="setMethod('cash')">Cash</button>
         </div>
-        <div class="price-info">Price: 300 Points per seat</div>
+        <div id="price-tag">Total: 100 Points</div>
 
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
@@ -125,6 +125,7 @@
     window.onload = () => {
         updatePointsDisplay();
         renderWallet();
+        updatePrice();
     };
 
     function selectMovie(name, el) {
@@ -137,6 +138,17 @@
         paymentMethod = m;
         document.getElementById('ptsBtn').classList.toggle('active', m === 'points');
         document.getElementById('cashBtn').classList.toggle('active', m === 'cash');
+        updatePrice();
+    }
+
+    function updatePrice() {
+        const seats = parseInt(document.getElementById('seats').value) || 0;
+        const tag = document.getElementById('price-tag');
+        if (paymentMethod === 'points') {
+            tag.innerText = `Total: ${seats * 100} Points`;
+        } else {
+            tag.innerText = `Total: ₹${seats * 300} Cash`;
+        }
     }
 
     function updatePointsDisplay() {
@@ -164,16 +176,17 @@
     }
 
     function bookNow() {
-        const seatCount = parseInt(document.getElementById('seats').value);
+        const seatCount = parseInt(document.getElementById('seats').value) || 1;
         const showTime = document.getElementById('startTime').value;
-        const totalCost = seatCount * 300;
+        const pointCost = seatCount * 100;
+        const cashCost = seatCount * 300;
 
         if(!selectedMovieName) { alert("Please select a movie."); return; }
         if(tickets.length >= 3) { alert("Wallet full. Cancel a ticket first."); return; }
         
         if(paymentMethod === 'points') {
-            if(balance < totalCost) { alert("Insufficient Points."); return; }
-            balance -= totalCost;
+            if(balance < pointCost) { alert("Insufficient Points."); return; }
+            balance -= pointCost;
             updatePointsDisplay();
         }
 
@@ -182,7 +195,7 @@
             seats: seatCount, 
             time: showTime, 
             method: paymentMethod.toUpperCase(),
-            cost: totalCost,
+            cost: paymentMethod === 'points' ? pointCost : cashCost,
             id: Math.random().toString(36).substr(2, 6) 
         };
 
@@ -211,7 +224,8 @@
 
     function deleteTicket(index) {
         const t = tickets[index];
-        if(confirm("Cancel booking? You will receive a full refund of " + (t.method === 'POINTS' ? t.cost : 'Cash') + ".")) {
+        const refundMsg = t.method === 'POINTS' ? `refund of ${t.cost} Points` : "Cash refund at counter";
+        if(confirm(`Cancel booking? You will receive a ${refundMsg}.`)) {
             if(t.method === 'POINTS') {
                 balance += t.cost;
                 updatePointsDisplay();
@@ -224,7 +238,6 @@
 
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
 
-    // ADDITIVE ADMIN: Adds 100 points every 5 clicks
     function adminPointsAdd() {
         adminClicks++;
         if (adminClicks >= 5) {
