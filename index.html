@@ -20,7 +20,7 @@
         .movie-option { background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: bold; color: #888; }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* WIDTH FIX: Uses 50% calculation minus half the gap for pixel-perfect width */
+        /* WIDTH FIX: Precise 50/50 split */
         .input-row { display: flex; width: 100%; gap: 10px; margin-bottom: 15px; box-sizing: border-box; }
         .input-box { width: calc(50% - 5px); text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
@@ -53,15 +53,9 @@
 
         /* QR PAGE STYLES */
         #ticket-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
-        
-        .qr-frame { 
-            position: relative; padding: 12px; border: 2px solid var(--gold); outline: 4px solid #fff; box-shadow: 0 0 0 1px var(--gold); 
-            margin: 20px auto; display: inline-block; background: #fff; border-radius: 4px; overflow: hidden;
-        }
-
+        .qr-frame { position: relative; padding: 12px; border: 2px solid var(--gold); outline: 4px solid #fff; box-shadow: 0 0 0 1px var(--gold); margin: 20px auto; display: inline-block; background: #fff; border-radius: 4px; overflow: hidden; }
         .scan-line { position: absolute; width: 100%; height: 3px; background: var(--error); box-shadow: 0 0 15px var(--error); top: 0; left: 0; z-index: 15; animation: moveLine 2.5s infinite linear; }
         @keyframes moveLine { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
-
         .gate-control { margin-top: 50px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
         .redeem-txt { color: #888; font-size: 13px; cursor: pointer; text-decoration: underline; font-weight: bold; }
     </style>
@@ -98,19 +92,10 @@
 
 <div id="ticket-page">
     <div style="font-weight: 900; letter-spacing: 4px; font-size: 18px; margin-bottom: 25px;">ENTRY PASS</div>
-
-    <div class="qr-frame">
-        <div class="scan-line"></div>
-        <div id="qrcode"></div>
-    </div>
-    
+    <div class="qr-frame"><div class="scan-line"></div><div id="qrcode"></div></div>
     <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8; margin-top: 10px;"></div>
-    
     <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:30px; border-radius: 50px;" onclick="closeTicket()">Back</button>
-
-    <div class="gate-control">
-        <div id="redeem-btn-container"></div>
-    </div>
+    <div class="gate-control"><div id="redeem-btn-container"></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -166,20 +151,20 @@
         document.getElementById('ticket-page').style.display = 'flex';
     }
 
-    function redeem(i) { tickets.splice(i, 1); localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); renderWallet(); closeTicket(); alert("✅ Redeemed"); }
-    
-    // RESTORED: Refund Function
-    function deleteWithRefund(i) { 
-        if(confirm("Cancel and Refund?")) { 
-            if(tickets[i].method === 'POINTS') {
-                balance += tickets[i].cost; 
+    function deleteWithRefund(i) {
+        if(confirm("Cancel and Refund?")) {
+            // Fix: Check case-insensitive
+            if(tickets[i].method.toUpperCase() === 'POINTS') {
+                balance += tickets[i].cost;
+                updatePointsDisplay();
             }
-            tickets.splice(i, 1); 
-            updatePointsDisplay(); 
-            renderWallet(); 
-        } 
+            tickets.splice(i, 1);
+            localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
+            renderWallet();
+        }
     }
 
+    function redeem(i) { tickets.splice(i, 1); localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); renderWallet(); closeTicket(); alert("✅ Redeemed"); }
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
     function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Pts"); adminClicks=0; } }
 </script>
