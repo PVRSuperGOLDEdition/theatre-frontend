@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PVR Super Gold | Pro</title>
+    <title>PVR Super Gold | Official</title>
     <style>
-        :root { --gold: #D4AF37; --bg: #050505; --card-bg: #111; --error: #ff4d4d; }
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow-x: hidden; height: 100%; }
+        :root { --gold: #D4AF37; --bg: #050505; --card-bg: #111; --error: #ff4d4d; --success: #2ecc71; }
+        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; height: 100%; overflow-x: hidden; }
         
-        #booking-page { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; box-sizing: border-box; min-height: 100vh; }
-        .container { width: 100%; max-width: 400px; text-align: center; }
+        .container { width: 100%; max-width: 400px; text-align: center; margin: auto; padding: 20px; box-sizing: border-box; }
+        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 22px; cursor: pointer; margin-bottom: 5px; }
 
-        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 22px; margin-bottom: 25px; cursor: pointer; }
+        .rates-info { font-size: 10px; color: #666; display: flex; justify-content: space-around; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
 
-        .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 12px; margin-bottom: 20px; cursor: pointer; }
+        .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 12px; margin-bottom: 20px; }
         .balance-value { font-size: 18px; color: var(--gold); font-weight: bold; }
 
         .movie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
@@ -21,71 +21,94 @@
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
         .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .input-box { flex: 1; text-align: left; }
-        label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
         input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
 
         .method-toggle { display: flex; gap: 10px; margin-bottom: 5px; }
-        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; }
+        .m-btn { flex: 1; padding: 15px 10px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; text-align: center; font-weight: bold; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
         
         #total-calc { font-size: 14px; color: var(--gold); margin: 15px 0; font-weight: bold; background: rgba(212,175,55,0.05); padding: 10px; border-radius: 8px; }
 
-        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .ticket-info { flex-grow: 1; cursor: pointer; }
-        .delete-btn { color: #555; font-size: 20px; padding: 5px 10px; cursor: pointer; }
-
         .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+
+        .ticket-bar { background: #161616; border-left: 3px solid var(--gold); padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+
+        /* --- THE GOLD SEAL SYSTEM --- */
+        .seal-wrapper { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; margin: 20px auto; }
+        .gold-seal-border { position: absolute; width: 100%; height: 100%; border: 4px double var(--gold); border-radius: 50%; opacity: 0.3; }
+        .inner-seal { position: absolute; width: 90%; height: 90%; border: 1px solid var(--gold); border-radius: 50%; opacity: 0.2; }
+        #qrcode { background: #fff; padding: 15px; border-radius: 10px; position: relative; z-index: 5; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .seal-text { position: absolute; bottom: -10px; background: white; padding: 2px 10px; color: var(--gold); font-size: 10px; font-weight: 900; letter-spacing: 2px; border: 1px solid var(--gold); z-index: 10; border-radius: 4px; }
 
         /* Overlays */
         #ticket-page, #scanner-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000; display: none; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 100; overflow-y: auto; padding: 40px 0; }
         #scanner-page { background: #000; color: #fff; justify-content: center; }
-        #qrcode { background: #fff; padding: 10px; margin-bottom: 20px; }
         #reader { width: 300px; border: 2px solid var(--gold); border-radius: 10px; overflow: hidden; }
 
-        .gate-control { margin-top: 80px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
+        .payment-alert { background: #fff5f5; border: 2px solid var(--error); color: var(--error); padding: 15px; border-radius: 10px; margin: 15px; width: 80%; font-weight: bold; display: none; }
+        .gate-control { margin-top: 50px; padding: 20px; border-top: 1px dashed #ccc; width: 80%; text-align: center; }
         .redeem-txt { color: #888; font-size: 12px; cursor: pointer; text-decoration: underline; font-weight: bold; }
+        
+        #history-btn { font-size: 10px; color: #444; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div id="booking-page">
-    <div class="container">
-        <h1 onclick="openScanner()">PVR Super Gold</h1>
+<div class="container" id="booking-page">
+    <h1 onclick="openScanner()">PVR Super Gold</h1>
 
-        <div class="balance-card" onclick="adminPointsAdd()">
-            <div class="balance-value" id="balanceText">100 Points</div>
-        </div>
-
-        <div class="movie-grid">
-            <div class="movie-option" onclick="selectMovie('Avatar 2', this)">Avatar 2</div>
-            <div class="movie-option" onclick="selectMovie('The Batman', this)">The Batman</div>
-            <div class="movie-option" onclick="selectMovie('Gladiator II', this)">Gladiator II</div>
-            <div class="movie-option" onclick="selectMovie('Animal', this)">Animal</div>
-        </div>
-
-        <div class="input-row">
-            <div class="input-box"><label>Seats</label><input type="number" id="seats" value="1" min="1" oninput="calculateTotal()"></div>
-            <div class="input-box"><label>Time</label><input type="time" id="startTime" value="19:00"></div>
-        </div>
-
-        <div class="method-toggle">
-            <div class="m-btn active" id="ptsBtn" onclick="setMethod('points')">POINTS</div>
-            <div class="m-btn" id="cashBtn" onclick="setMethod('cash')">CASH</div>
-        </div>
-
-        <div id="total-calc">Total: 100 Points</div>
-        <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
-
-        <div id="ticket-list" style="margin-top:20px; text-align:left; width:100%;"></div>
+    <div class="rates-info">
+        <span>100 Points / Seat</span>
+        <span>300 Cash / Seat</span>
     </div>
+
+    <div class="balance-card" onclick="adminPointsAdd()">
+        <div class="balance-value" id="balanceText">100 Points</div>
+    </div>
+
+    <div class="movie-grid">
+        <div class="movie-option" onclick="selectMovie('Avatar 2', this)">Avatar 2</div>
+        <div class="movie-option" onclick="selectMovie('The Batman', this)">The Batman</div>
+        <div class="movie-option" onclick="selectMovie('Gladiator II', this)">Gladiator II</div>
+        <div class="movie-option" onclick="selectMovie('Animal', this)">Animal</div>
+    </div>
+
+    <div class="input-row">
+        <input type="number" id="seats" value="1" min="1" oninput="calculateTotal()">
+        <input type="time" id="startTime" value="19:00">
+    </div>
+
+    <div class="method-toggle">
+        <div class="m-btn active" id="ptsBtn" onclick="setMethod('points')">POINTS</div>
+        <div class="m-btn" id="cashBtn" onclick="setMethod('cash')">CASH</div>
+    </div>
+
+    <div id="total-calc">Total: 100 Points</div>
+    <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
+
+    <div id="ticket-list" style="margin-top:20px; text-align:left; width:100%;"></div>
+    
+    <div id="history-btn" onclick="showHistory()">Show Collection History</div>
 </div>
 
 <div id="ticket-page">
-    <div id="type-banner" style="font-weight:bold; color:var(--gold); margin-bottom:10px;"></div>
-    <div id="qrcode"></div>
-    <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8;"></div>
-    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px;" onclick="closeTicket()">Back</button>
+    <div style="font-weight: 900; letter-spacing: 4px; font-size: 16px; color: var(--gold); margin-bottom: 10px;">PREMIUM ENTRANCE PASS</div>
+    
+    <div id="cash-alert" class="payment-alert">
+        ⚠️ COLLECT CASH PAYMENT<br>
+        <span id="cash-amount-text" style="font-size: 24px;"></span>
+    </div>
+
+    <div class="seal-wrapper">
+        <div class="gold-seal-border"></div>
+        <div class="inner-seal"></div>
+        <div id="qrcode"></div>
+        <div class="seal-text">OFFICIAL SEAL</div>
+    </div>
+    
+    <div id="ticket-details" style="text-align: center; font-size: 14px; line-height: 1.6; margin-top: 10px;"></div>
+    
+    <button class="confirm-btn" style="width:200px; background:#000; color:#fff; margin-top:20px; border-radius: 50px;" onclick="closeTicket()">Back</button>
 
     <div class="gate-control">
         <div id="redeem-btn-container"></div>
@@ -95,7 +118,7 @@
 <div id="scanner-page">
     <h2 style="color:var(--gold)">GATE SCANNER</h2>
     <div id="reader"></div>
-    <button class="confirm-btn" style="width:200px; margin-top:20px;" onclick="closeScanner()">Cancel</button>
+    <button class="confirm-btn" style="width:200px; margin-top:20px; border-radius: 50px;" onclick="closeScanner()">Cancel</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -103,6 +126,7 @@
 <script>
     let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
+    let history = JSON.parse(localStorage.getItem('pvr_history')) || { points: 0, cash: 0 };
     let selectedMovieName = "";
     let paymentMethod = 'points';
     let adminClicks = 0;
@@ -111,20 +135,28 @@
 
     function selectMovie(name, el) { selectedMovieName = name; document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected')); el.classList.add('selected'); }
     function setMethod(m) { paymentMethod = m; document.getElementById('ptsBtn').classList.toggle('active', m === 'points'); document.getElementById('cashBtn').classList.toggle('active', m === 'cash'); calculateTotal(); }
-    function calculateTotal() { const s = parseInt(document.getElementById('seats').value) || 0; document.getElementById('total-calc').innerText = `Total: ${paymentMethod === 'points' ? s * 100 + ' Points' : s * 300 + ' Cash'}`; }
+    
+    function calculateTotal() { 
+        const s = parseInt(document.getElementById('seats').value) || 0; 
+        const total = paymentMethod === 'points' ? s * 100 : s * 300;
+        document.getElementById('total-calc').innerText = `Total: ${total} ${paymentMethod === 'points' ? 'Points' : 'Cash'}`; 
+    }
+
     function updatePointsDisplay() { document.getElementById('balanceText').innerText = `${balance} Points`; localStorage.setItem('pvr_balance', balance); }
 
     function bookNow() {
         const s = parseInt(document.getElementById('seats').value) || 1;
-        const cost = paymentMethod === 'points' ? s * 100 : s * 300;
-        if(!selectedMovieName) return alert("Select Movie");
-        if(paymentMethod === 'points' && balance < cost) return alert("Low Points");
+        const rate = paymentMethod === 'points' ? 100 : 300;
+        const totalCost = s * rate;
 
-        if(paymentMethod === 'points') balance -= cost;
+        if(!selectedMovieName) return alert("Select Movie");
+        if(paymentMethod === 'points' && balance < totalCost) return alert("Low Points");
+
+        if(paymentMethod === 'points') balance -= totalCost;
         
         const newTicket = { 
             movie: selectedMovieName, seats: s, time: document.getElementById('startTime').value, 
-            method: paymentMethod.toUpperCase(), cost: cost, id: Math.random().toString(36).substr(2, 6) 
+            method: paymentMethod.toUpperCase(), cost: totalCost, rate: rate, id: Math.random().toString(36).substr(2, 6) 
         };
 
         tickets.push(newTicket);
@@ -140,38 +172,51 @@
                 <div class="ticket-info" onclick="openExistingTicket(${i})">
                     <b>${t.movie}</b><br><small>${t.time} • ${t.seats} Seats (${t.method})</small>
                 </div>
-                <div class="delete-btn" onclick="deleteWithRefund(${i})">×</div>
+                <div style="color:#444; padding: 5px;" onclick="deleteHard(${i})">×</div>
             </div>`;
         });
     }
 
     function openExistingTicket(i) {
         const t = tickets[i];
-        document.getElementById('type-banner').innerText = t.method === 'CASH' ? "💎 CASH ENTRY" : "🎫 POINTS ENTRY";
-        document.getElementById('ticket-details').innerHTML = `<b>${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}`;
-        document.getElementById("qrcode").innerHTML = "";
+        const alertBox = document.getElementById('cash-alert');
         
-        // Data format: KEY|ID|METHOD|COST
-        const qrData = `PVR|${t.id}|${t.method}|${t.cost}`;
-        new QRCode(document.getElementById("qrcode"), { text: qrData, width: 200, height: 200 });
+        document.getElementById('ticket-details').innerHTML = `
+            <b>MOVIE:</b> ${t.movie}<br>
+            <b>TIME:</b> ${t.time} | <b>SEATS:</b> ${t.seats}<br>
+            <span style="font-size:18px; color:var(--gold); border-bottom: 1px solid #ddd; padding-bottom:5px;"><b>TOTAL: ${t.cost} ${t.method}</b></span>
+        `;
+
+        if(t.method === 'CASH') {
+            alertBox.style.display = "block";
+            document.getElementById('cash-amount-text').innerText = "₹" + t.cost;
+        } else {
+            alertBox.style.display = "none";
+        }
+
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: `PVR|${t.id}|${t.method}|${t.cost}`, width: 180, height: 180 });
 
         document.getElementById('redeem-btn-container').innerHTML = `<span class="redeem-txt" onclick="redeemProcess(${i})">REDEEM & DELETE</span>`;
         document.getElementById('ticket-page').style.display = 'flex';
         document.getElementById('ticket-page').scrollTop = 0;
     }
 
-    // THIS IS THE SCANNER LOGIC / REDEEM LOGIC
     function redeemProcess(i) {
         const t = tickets[i];
         if(t.method === 'CASH') {
-            alert(`💰 PAYMENT REQUIRED\nPlease collect: ${t.cost} Cash from user.`);
+            if(!confirm(`PAYMENT CHECK: Collect ₹${t.cost} cash?`)) return;
+            history.cash += t.cost;
+        } else {
+            history.points += t.cost;
         }
+        
         tickets.splice(i, 1);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
+        localStorage.setItem('pvr_history', JSON.stringify(history));
         renderWallet();
         closeTicket();
-        if(t.method === 'CASH') alert("✅ Cash Ticket Redeemed.");
-        else alert("✅ Points Ticket Redeemed.");
+        alert("✅ Entry Verified.");
     }
 
     let scanner;
@@ -181,34 +226,25 @@
         scanner.render((text) => {
             const parts = text.split('|');
             if(parts[0] !== 'PVR') return alert("Invalid QR");
-            
-            const id = parts[1];
-            const method = parts[2];
-            const cost = parts[3];
-            
-            const idx = tickets.findIndex(t => t.id === id);
+            const idx = tickets.findIndex(t => t.id === parts[1]);
             if(idx !== -1) {
                 scanner.clear();
                 document.getElementById('scanner-page').style.display = 'none';
-                redeemProcess(idx); // Calls the payment check logic
+                redeemProcess(idx);
             } else {
-                alert("❌ Ticket Not Found or Already Used");
+                alert("❌ Ticket Not Found");
             }
         });
     }
 
-    function deleteWithRefund(i) {
-        if(confirm("Cancel and Refund?")) {
-            if(tickets[i].method === 'POINTS') balance += tickets[i].cost;
-            tickets.splice(i, 1);
-            updatePointsDisplay(); renderWallet();
-        }
+    function showHistory() {
+        alert(`DAILY COLLECTION\n------------------\nPoints Redeemed: ${history.points}\nCash Collected: ₹${history.cash}`);
     }
 
+    function deleteHard(i) { if(confirm("Delete without refund?")) { tickets.splice(i,1); localStorage.setItem('pvr_tickets', JSON.stringify(tickets)); renderWallet(); } }
     function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
     function closeScanner() { if(scanner) scanner.clear(); document.getElementById('scanner-page').style.display = 'none'; }
     function adminPointsAdd() { adminClicks++; if(adminClicks>=5){ balance+=100; updatePointsDisplay(); alert("+100 Points"); adminClicks=0; } }
 </script>
 </body>
 </html>
-
