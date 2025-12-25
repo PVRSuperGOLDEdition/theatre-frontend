@@ -8,27 +8,10 @@
         :root { --gold: #D4AF37; --bg: #050505; --error: #ff4d4d; }
         body, html { margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: white; overflow: hidden; height: 100%; }
         
-        /* Main Booking Page */
-        #booking-page {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-
+        #booking-page { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; box-sizing: border-box; }
         .container { width: 100%; max-width: 380px; text-align: center; }
 
-        h1 { 
-            color: var(--gold); 
-            text-transform: uppercase; 
-            letter-spacing: 6px; 
-            font-size: 24px; 
-            margin: 0 0 30px 0;
-            text-align: center;
-        }
+        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 24px; margin: 0 0 30px 0; }
 
         .balance-card {
             background: rgba(212, 175, 55, 0.05);
@@ -36,24 +19,18 @@
             padding: 20px;
             border-radius: 16px;
             margin-bottom: 25px;
+            cursor: pointer; /* Admin Reset Area */
         }
 
-        .balance-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px; }
-        .balance-value { font-size: 22px; color: var(--gold); font-weight: bold; }
+        .balance-label { font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 4px; pointer-events: none; }
+        .balance-value { font-size: 22px; color: var(--gold); font-weight: bold; pointer-events: none; }
 
         .input-box { margin-bottom: 18px; text-align: left; }
         label { display: block; font-size: 10px; color: var(--gold); text-transform: uppercase; margin-bottom: 8px; font-weight: bold; }
         
         select, input {
-            width: 100%;
-            padding: 14px;
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 10px;
-            color: white;
-            font-size: 16px;
-            box-sizing: border-box;
-            outline: none;
+            width: 100%; padding: 14px; background: #111; border: 1px solid #222;
+            border-radius: 10px; color: white; font-size: 16px; box-sizing: border-box; outline: none;
         }
 
         .method-toggle { display: flex; gap: 10px; }
@@ -63,50 +40,30 @@
         }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212, 175, 55, 0.1); }
 
-        /* Inline Error Message */
         #error-display {
-            color: var(--error);
-            font-size: 13px;
-            margin-top: 15px;
-            display: none;
-            background: rgba(255, 77, 77, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--error);
+            color: var(--error); font-size: 13px; margin-top: 15px; display: none;
+            background: rgba(255, 77, 77, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--error);
         }
 
         .confirm-btn {
-            width: 100%;
-            padding: 18px;
-            background: var(--gold);
-            color: black;
-            border: none;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 15px;
-            text-transform: uppercase;
-            margin-top: 25px;
-            cursor: pointer;
+            width: 100%; padding: 18px; background: var(--gold); color: black;
+            border: none; border-radius: 12px; font-weight: bold; font-size: 15px;
+            text-transform: uppercase; margin-top: 25px; cursor: pointer;
         }
 
-        /* Ticket Page (The "New Website" feel) */
+        /* Ticket Page */
         #ticket-page {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff;
-            color: #000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            animation: fadeIn 0.4s ease;
+            background: #ffffff; color: #000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; animation: fadeIn 0.4s ease;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         .ticket-title { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 5px; }
-        #qrcode { padding: 15px; background: #fff; margin-bottom: 30px; }
+        #qrcode { padding: 15px; background: #fff; margin-bottom: 30px; border: 1px solid #eee; }
         
         .details-grid { width: 85%; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
         .detail-item { border-left: 1px solid #ddd; padding-left: 10px; }
@@ -122,8 +79,8 @@
         <div class="container">
             <h1>PVR Super Gold</h1>
 
-            <div class="balance-card">
-                <div class="balance-label">Available Balance</div>
+            <div class="balance-card" id="adminArea" onclick="adminReset()">
+                <div class="balance-label">Device Balance</div>
                 <div class="balance-value" id="balanceText">100 Points</div>
             </div>
 
@@ -149,7 +106,7 @@
                 </div>
             </div>
 
-            <div id="error-display">Insufficient Points. Please use Cash.</div>
+            <div id="error-display">Insufficient Points for this Device.</div>
 
             <button class="confirm-btn" onclick="openTicket()">Confirm Booking</button>
         </div>
@@ -157,35 +114,40 @@
 
     <div id="ticket-page">
         <div class="ticket-title">PVR SUPER GOLD</div>
-
         <div id="qrcode"></div>
-
         <div class="details-grid">
-            <div class="detail-item">
-                <div class="detail-label">Movie</div>
-                <div class="detail-val" id="t-movie">---</div>
-            </div>
-            <div class="detail-item">
-                <div class="detail-label">Seats</div>
-                <div class="detail-val" id="t-seats">---</div>
-            </div>
-            <div class="detail-item">
-                <div class="detail-label">Payment</div>
-                <div class="detail-val" id="t-method">---</div>
-            </div>
-            <div class="detail-item">
-                <div class="detail-label">Entry</div>
-                <div class="detail-val">Super Gold</div>
-            </div>
+            <div class="detail-item"><div class="detail-label">Movie</div><div class="detail-val" id="t-movie">---</div></div>
+            <div class="detail-item"><div class="detail-label">Seats</div><div class="detail-val" id="t-seats">---</div></div>
+            <div class="detail-item"><div class="detail-label">Payment</div><div class="detail-val" id="t-method">---</div></div>
+            <div class="detail-item"><div class="detail-label">Entry</div><div class="detail-val">Super Gold</div></div>
         </div>
-
-        <button class="close-btn" onclick="location.reload()">New Booking</button>
+        <button class="close-btn" onclick="location.reload()">Back to Home</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
-        let balance = 100;
+        // Points Management
+        let balance = parseInt(localStorage.getItem('pvr_balance'));
+        if (isNaN(balance)) {
+            balance = 100;
+            localStorage.setItem('pvr_balance', 100);
+        }
+        
+        document.getElementById('balanceText').innerText = `${balance} Points`;
         let method = 'points';
+        let clickCount = 0;
+
+        // Admin Secret Reset
+        function adminReset() {
+            clickCount++;
+            if (clickCount >= 5) {
+                balance = 100;
+                localStorage.setItem('pvr_balance', 100);
+                document.getElementById('balanceText').innerText = `100 Points`;
+                alert("Points Reset to 100 (Admin Mode)");
+                clickCount = 0;
+            }
+        }
 
         function setMethod(m) {
             method = m;
@@ -210,6 +172,7 @@
 
             if (method === 'points') {
                 balance -= cost;
+                localStorage.setItem('pvr_balance', balance);
                 document.getElementById('balanceText').innerText = `${balance} Points`;
             }
 
@@ -219,7 +182,7 @@
 
             document.getElementById("qrcode").innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
-                text: `PVR-SG|${movie}|SEATS:${seats}|PAY:${method}`,
+                text: `PVR-SG|${movie}|SEATS:${seats}|PAY:${method}|UID:${Math.random().toString(36).substr(2, 5)}`,
                 width: 180, height: 180
             });
 
