@@ -6,55 +6,59 @@
     <title>PVR Super Gold | Premium</title>
     <style>
         :root { --gold: #D4AF37; --bg: #050505; --card-bg: #111; --error: #ff4d4d; }
-        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow-x: hidden; }
+        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; overflow-x: hidden; height: 100%; }
         
-        #booking-page { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; box-sizing: border-box; min-height: 100vh; }
+        #booking-page { display: flex; flex-direction: column; align-items: center; padding: 30px 20px; box-sizing: border-box; min-height: 100vh; }
         .container { width: 100%; max-width: 400px; text-align: center; }
 
-        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 24px; margin-bottom: 30px; }
+        h1 { color: var(--gold); text-transform: uppercase; letter-spacing: 6px; font-size: 22px; margin-bottom: 25px; }
 
-        /* Balance & Wallet */
-        .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 15px; border-radius: 16px; margin-bottom: 25px; cursor: pointer; }
-        .balance-value { font-size: 20px; color: var(--gold); font-weight: bold; }
+        /* Balance Area */
+        .balance-card { background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.3); padding: 12px; border-radius: 12px; margin-bottom: 20px; cursor: pointer; }
+        .balance-value { font-size: 18px; color: var(--gold); font-weight: bold; }
 
         /* Movie Selection Grid */
-        .movie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .movie-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .movie-option { 
-            background: #111; border: 1px solid #333; padding: 15px; border-radius: 12px; 
-            cursor: pointer; transition: 0.3s; font-size: 13px; font-weight: bold;
+            background: #111; border: 1px solid #333; padding: 12px; border-radius: 10px; 
+            cursor: pointer; transition: 0.2s; font-size: 13px; font-weight: bold; color: #888;
         }
         .movie-option.selected { border-color: var(--gold); background: rgba(212,175,55,0.1); color: var(--gold); }
 
-        /* Inputs */
-        .input-row { display: flex; gap: 10px; margin-bottom: 20px; }
+        /* Input Rows */
+        .input-row { display: flex; gap: 10px; margin-bottom: 15px; }
         .input-box { flex: 1; text-align: left; }
         label { display: block; font-size: 9px; color: var(--gold); text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
-        input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; }
+        input { width: 100%; padding: 12px; background: #111; border: 1px solid #222; border-radius: 8px; color: white; box-sizing: border-box; outline: none; }
 
-        /* Payment */
-        .method-toggle { display: flex; gap: 10px; margin-bottom: 10px; }
-        .m-btn { flex: 1; padding: 12px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; }
+        /* Payment Buttons */
+        .method-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
+        .m-btn { flex: 1; padding: 12px; background: #111; border: 1px solid #222; color: #666; border-radius: 8px; cursor: pointer; font-size: 14px; }
         .m-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(212,175,55,0.1); }
 
-        /* Tickets Wallet Section */
-        #wallet-section { width: 100%; margin-top: 30px; text-align: left; }
-        .wallet-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        /* Wallet Section */
+        #wallet-section { width: 100%; margin-top: 25px; text-align: left; }
+        .wallet-title { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
         .ticket-bar { 
-            background: #1a1a1a; border-left: 4px solid var(--gold); padding: 12px; 
-            border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer;
+            background: #161616; border-left: 3px solid var(--gold); padding: 12px; 
+            border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;
         }
-        .ticket-bar span { font-size: 14px; font-weight: bold; }
+        .ticket-info { flex-grow: 1; cursor: pointer; }
+        .delete-btn { color: #555; font-size: 18px; padding: 0 5px; cursor: pointer; margin-left: 10px; }
+        .delete-btn:hover { color: var(--error); }
 
-        .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        .confirm-btn { width: 100%; padding: 18px; background: var(--gold); color: black; border: none; border-radius: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; font-size: 15px; }
 
-        /* Ticket Full Page Overlay */
+        /* TICKET OVERLAY (No Refresh) */
         #ticket-page {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; color: #000;
             display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100;
+            animation: slideUp 0.4s ease-out;
         }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
         #qrcode { background: #fff; padding: 10px; margin-bottom: 20px; }
-        .close-btn { margin-top: 30px; padding: 12px 30px; background: #000; color: #fff; border-radius: 50px; cursor: pointer; }
+        .close-btn { margin-top: 30px; padding: 15px 40px; background: #000; color: #fff; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -68,11 +72,11 @@
         </div>
 
         <label>Select Movie</label>
-        <div class="movie-grid" id="movieGrid">
+        <div class="movie-grid">
             <div class="movie-option" onclick="selectMovie('Avatar 2', this)">Avatar 2</div>
-            <div class="movie-option" onclick="selectMovie('Batman', this)">Batman</div>
+            <div class="movie-option" onclick="selectMovie('The Batman', this)">The Batman</div>
             <div class="movie-option" onclick="selectMovie('Gladiator II', this)">Gladiator II</div>
-            <div class="movie-option" onclick="selectMovie('Inception', this)">Inception</div>
+            <div class="movie-option" onclick="selectMovie('Animal', this)">Animal</div>
         </div>
 
         <div class="input-row">
@@ -81,8 +85,8 @@
                 <input type="number" id="seats" value="1" min="1">
             </div>
             <div class="input-box">
-                <label>Start Time</label>
-                <input type="time" id="startTime" value="18:00">
+                <label>Show Time</label>
+                <input type="time" id="startTime" value="19:00">
             </div>
         </div>
 
@@ -94,16 +98,16 @@
         <button class="confirm-btn" onclick="bookNow()">Confirm Booking</button>
 
         <div id="wallet-section">
-            <div class="wallet-title">Your Tickets (Max 3)</div>
+            <div class="wallet-title" id="walletLabel">Active Tickets (0/3)</div>
             <div id="ticket-list"></div>
         </div>
     </div>
 </div>
 
 <div id="ticket-page">
-    <div style="font-weight: 900; letter-spacing: 2px; margin-bottom: 20px;">PVR SUPER GOLD</div>
+    <div style="font-weight: 900; letter-spacing: 3px; font-size: 20px; margin-bottom: 25px;">PVR SUPER GOLD</div>
     <div id="qrcode"></div>
-    <div id="ticket-details" style="text-align: center; font-size: 14px; line-height: 1.6;"></div>
+    <div id="ticket-details" style="text-align: center; font-size: 15px; line-height: 1.8;"></div>
     <button class="close-btn" onclick="closeTicket()">Back to Home</button>
 </div>
 
@@ -111,86 +115,118 @@
 <script>
     let balance = parseInt(localStorage.getItem('pvr_balance')) || 100;
     let tickets = JSON.parse(localStorage.getItem('pvr_tickets')) || [];
-    let selectedMovie = "";
-    let method = 'points';
-    let clickCount = 0;
+    let selectedMovieName = "";
+    let paymentMethod = 'points';
+    let adminClicks = 0;
 
     window.onload = () => {
-        updateUI();
+        updatePointsDisplay();
         renderWallet();
     };
 
     function selectMovie(name, el) {
-        selectedMovie = name;
+        selectedMovieName = name;
         document.querySelectorAll('.movie-option').forEach(opt => opt.classList.remove('selected'));
         el.classList.add('selected');
     }
 
     function setMethod(m) {
-        method = m;
+        paymentMethod = m;
         document.getElementById('ptsBtn').classList.toggle('active', m === 'points');
         document.getElementById('cashBtn').classList.toggle('active', m === 'cash');
     }
 
-    function updateUI() {
+    function updatePointsDisplay() {
         document.getElementById('balanceText').innerText = `${balance} Points`;
     }
 
     function renderWallet() {
         const list = document.getElementById('ticket-list');
         list.innerHTML = "";
+        document.getElementById('walletLabel').innerText = `Active Tickets (${tickets.length}/3)`;
+        
         tickets.forEach((t, index) => {
             const bar = document.createElement('div');
             bar.className = 'ticket-bar';
-            bar.onclick = () => showTicket(index);
-            bar.innerHTML = `<span>${t.movie} (${t.time})</span> <small>View</small>`;
+            bar.innerHTML = `
+                <div class="ticket-info" onclick="openExistingTicket(${index})">
+                    <span>${t.movie}</span><br>
+                    <small style="color:#666">${t.time} • ${t.seats} Seats</small>
+                </div>
+                <div class="delete-btn" onclick="deleteTicket(${index})">×</div>
+            `;
             list.appendChild(bar);
         });
     }
 
     function bookNow() {
-        const seats = document.getElementById('seats').value;
-        const time = document.getElementById('startTime').value;
-        const cost = seats * 100;
+        const seatCount = parseInt(document.getElementById('seats').value);
+        const showTime = document.getElementById('startTime').value;
+        const totalCost = seatCount * 100;
 
-        if(!selectedMovie) { alert("Select a movie first"); return; }
-        if(tickets.length >= 3) { alert("Wallet full (Max 3 tickets)"); return; }
-        if(method === 'points' && balance < cost) { alert("Insufficient points"); return; }
-
-        if(method === 'points') {
-            balance -= cost;
+        if(!selectedMovieName) { alert("Please select a movie."); return; }
+        if(tickets.length >= 3) { alert("Wallet full. Delete a ticket first."); return; }
+        
+        if(paymentMethod === 'points') {
+            if(balance < totalCost) { alert("Insufficient Points."); return; }
+            balance -= totalCost;
             localStorage.setItem('pvr_balance', balance);
         }
 
-        const newTicket = { movie: selectedMovie, seats, time, method: method.toUpperCase(), id: Math.random().toString(36).substr(2, 5) };
+        const newTicket = { 
+            movie: selectedMovieName, 
+            seats: seatCount, 
+            time: showTime, 
+            method: paymentMethod.toUpperCase(),
+            id: Math.random().toString(36).substr(2, 6) 
+        };
+
         tickets.push(newTicket);
         localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
         
-        updateUI();
+        updatePointsDisplay();
         renderWallet();
-        showTicket(tickets.length - 1);
+        openExistingTicket(tickets.length - 1);
     }
 
-    function showTicket(index) {
+    function openExistingTicket(index) {
         const t = tickets[index];
         const details = document.getElementById('ticket-details');
-        details.innerHTML = `<b>${t.movie}</b><br>Seats: ${t.seats} | Time: ${t.time}<br>Payment: ${t.method}`;
+        details.innerHTML = `
+            <b>MOVIE:</b> ${t.movie.toUpperCase()}<br>
+            <b>SEATS:</b> ${t.seats} | <b>TIME:</b> ${t.time}<br>
+            <b>PAYMENT:</b> ${t.method}
+        `;
         
         document.getElementById("qrcode").innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: `PVR-GOLD|${t.id}|${t.movie}|${t.time}`, width: 200, height: 200 });
+        new QRCode(document.getElementById("qrcode"), { 
+            text: `PVR-SG|${t.id}|${t.movie}|${t.time}`, 
+            width: 200, height: 200 
+        });
         
         document.getElementById('ticket-page').style.display = 'flex';
     }
 
-    function closeTicket() { document.getElementById('ticket-page').style.display = 'none'; }
+    function deleteTicket(index) {
+        if(confirm("Cancel this booking?")) {
+            tickets.splice(index, 1);
+            localStorage.setItem('pvr_tickets', JSON.stringify(tickets));
+            renderWallet();
+        }
+    }
+
+    function closeTicket() {
+        document.getElementById('ticket-page').style.display = 'none';
+    }
 
     function adminPointsReset() {
-        clickCount++;
-        if (clickCount >= 5) {
-            balance = 100; tickets = [];
-            localStorage.clear();
+        adminClicks++;
+        if (adminClicks >= 5) {
+            balance = 100;
             localStorage.setItem('pvr_balance', 100);
-            location.reload();
+            updatePointsDisplay();
+            alert("Admin: Points refilled to 100.");
+            adminClicks = 0;
         }
     }
 </script>
